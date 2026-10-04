@@ -1,0 +1,175 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:FormaterXJ.ViewModels"
+        xmlns:models="using:FormaterXJ.Models"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DesignWidth="1100" d:DesignHeight="700"
+        x:Class="FormaterXJ.Views.MainWindow"
+        Loaded="MainWindow_Loaded"
+        x:DataType="vm:MainViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="FormaterXJ - JSON/XML Formatter">
+
+    <Design.DataContext>
+        <vm:MainViewModel />
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*">
+        <DockPanel LastChildFill="True">
+            <Button DockPanel.Dock="Right"
+                    Content="Formatear"
+                    Command="{Binding FormatDocumentCommand}"
+                    Margin="8,4"
+                    Padding="16,6" />
+            <Menu Padding="8,6">
+                <MenuItem Header="Archivo">
+                    <MenuItem Header="Abrir..." Click="OpenMenuItem_Click" />
+                    <MenuItem Header="Guardar formateado..." Click="SaveMenuItem_Click" />
+                    <Separator />
+                    <MenuItem Header="Cerrar" Click="CloseMenuItem_Click" />
+                </MenuItem>
+                <MenuItem Header="Opciones">
+                    <MenuItem Header="Tema">
+                        <MenuItem Header="Oscuro"
+                                  ToggleType="Radio"
+                                  IsChecked="True"
+                                  Click="DarkTheme_Click" />
+                        <MenuItem Header="Claro"
+                                  ToggleType="Radio"
+                                  Click="LightTheme_Click" />
+                        <MenuItem Header="Tema del sistema"
+                                  ToggleType="Radio"
+                                  Click="SystemTheme_Click" />
+                    </MenuItem>
+                    <MenuItem Header="Vista">
+                        <MenuItem Header="Tamaño de letra del editor">
+                            <MenuItem Header="10 pt" Tag="10" Click="EditorFontSize_Click" />
+                            <MenuItem Header="12 pt" Tag="12" Click="EditorFontSize_Click" />
+                            <MenuItem Header="14 pt" Tag="14" Click="EditorFontSize_Click" />
+                            <MenuItem Header="16 pt" Tag="16" Click="EditorFontSize_Click" />
+                            <MenuItem Header="18 pt" Tag="18" Click="EditorFontSize_Click" />
+                        </MenuItem>
+                        <MenuItem Header="Tamaño de letra del árbol">
+                            <MenuItem Header="10 pt" Tag="10" Click="TreeFontSize_Click" />
+                            <MenuItem Header="12 pt" Tag="12" Click="TreeFontSize_Click" />
+                            <MenuItem Header="14 pt" Tag="14" Click="TreeFontSize_Click" />
+                            <MenuItem Header="16 pt" Tag="16" Click="TreeFontSize_Click" />
+                            <MenuItem Header="18 pt" Tag="18" Click="TreeFontSize_Click" />
+                        </MenuItem>
+                        <Separator />
+                        <MenuItem Header="Numeración de líneas"
+                                  ToggleType="CheckBox"
+                                  IsChecked="{Binding ShowLineNumbers, Mode=TwoWay}"
+                                  Click="LineNumbersMenuItem_Click" />
+                    </MenuItem>
+                </MenuItem>
+            </Menu>
+        </DockPanel>
+
+        <Grid Grid.Row="1" RowDefinitions="*,Auto,Auto" Margin="16">
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Border BorderBrush="#3A3A3A"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="10">
+                    <Grid RowDefinitions="Auto,Auto,*">
+                        <TextBlock Text="Documento"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,8" />
+                        <TextBlock Grid.Row="1"
+                                   Text="{Binding DetectedFormat, StringFormat='Formato detectado: {0}'}"
+                                   Foreground="{DynamicResource ThemeForegroundBrush}"
+                                   Margin="0,0,0,8" />
+                        <Grid Grid.Row="2" ColumnDefinitions="Auto,*">
+                            <Border IsVisible="{Binding ShowLineNumbers, Mode=OneWay}"
+                                    Background="{DynamicResource ThemeBackgroundBrush}"
+                                    BorderBrush="{DynamicResource ThemeForegroundBrush}"
+                                    BorderThickness="0,0,1,0"
+                                    MinWidth="36">
+                                <ScrollViewer x:Name="LineNumberScrollViewer"
+                                              VerticalScrollBarVisibility="Hidden"
+                                              HorizontalScrollBarVisibility="Disabled">
+                                    <TextBlock Text="{Binding LineNumbersText}"
+                                               FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                                               FontSize="{Binding EditorFontSize}"
+                                               TextAlignment="Right"
+                                               Foreground="{DynamicResource ThemeForegroundBrush}"
+                                               Opacity="0.65"
+                                               Padding="6,4" />
+                                </ScrollViewer>
+                            </Border>
+                            <TextBox x:Name="DocumentEditor"
+                                     Grid.Column="1"
+                                     Text="{Binding InputText}"
+                                     PlaceholderText="Pega o escribe tu JSON o XML aquí..."
+                                     AcceptsReturn="True"
+                                     TextWrapping="NoWrap"
+                                     FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                                     FontSize="{Binding EditorFontSize}" />
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="1"
+                        BorderBrush="#3A3A3A"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="10">
+                    <Grid RowDefinitions="Auto,*">
+                        <TextBlock Text="Estructura del documento"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,8" />
+                        <TreeView Grid.Row="1"
+                                  ItemsSource="{Binding RootNodes}"
+                                  SelectedItem="{Binding SelectedNode, Mode=TwoWay}"
+                                  FontSize="{Binding TreeFontSize}">
+                            <TreeView.ItemTemplate>
+                                <TreeDataTemplate ItemsSource="{Binding Children}" DataType="models:DocumentNode">
+                                    <Border Padding="4" CornerRadius="4">
+                                        <Border.Background>
+                                            <Binding Path="SearchBackground" />
+                                        </Border.Background>
+                                        <TextBlock Text="{Binding DisplayText}"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </Border>
+                                </TreeDataTemplate>
+                            </TreeView.ItemTemplate>
+                        </TreeView>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <Grid Grid.Row="1" Margin="0,12,0,0" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10">
+                <TextBlock Text="Buscar:"
+                           VerticalAlignment="Center" />
+                <TextBox Grid.Column="1"
+                         Text="{Binding SearchText}"
+                         PlaceholderText="Nombre, atributo, valor..." />
+                <Button Grid.Column="2"
+                        Content="Anterior"
+                        Command="{Binding SearchPreviousCommand}"
+                        Padding="16,8" />
+                <Button Grid.Column="3"
+                        Content="Siguiente"
+                        Command="{Binding SearchNextCommand}"
+                        Padding="16,8" />
+            </Grid>
+
+            <Border Grid.Row="2"
+                    IsVisible="{Binding HasError}"
+                    BorderBrush="#c75a5a"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="#3b2020"
+                    Padding="12"
+                    Margin="0,12,0,0">
+                <TextBlock Text="{Binding ErrorMessage}"
+                           Foreground="#ffd5d5" />
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
