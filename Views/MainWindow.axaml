@@ -87,8 +87,7 @@
                         <Border IsVisible="{Binding ShowLineNumbers, Mode=OneWay}"
                                 Background="{DynamicResource ThemeBackgroundBrush}"
                                 BorderBrush="{DynamicResource ThemeForegroundBrush}"
-                                BorderThickness="0,0,1,0"
-                                MinWidth="36">
+                                BorderThickness="0,0,1,0">
                             <ScrollViewer x:Name="LineNumberScrollViewer"
                                           VerticalScrollBarVisibility="Hidden"
                                           HorizontalScrollBarVisibility="Disabled">
@@ -96,9 +95,10 @@
                                            FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
                                            FontSize="{Binding EditorFontSize}"
                                            TextAlignment="Right"
+                                           TextWrapping="NoWrap"
                                            Foreground="{DynamicResource ThemeForegroundBrush}"
                                            Opacity="0.65"
-                                           Padding="6,4" />
+                                           Padding="0,4,4,4" />
                             </ScrollViewer>
                         </Border>
                         <TextBox x:Name="DocumentEditor"
@@ -133,12 +133,32 @@
                     <Grid RowDefinitions="*">
                         <TreeView Grid.Row="0"
                                   x:Name="StructureTree"
+                                  x:CompileBindings="False"
                                   ItemsSource="{Binding RootNodes}"
                                   SelectedItem="{Binding SelectedNode, Mode=TwoWay}"
                                   FontSize="{Binding TreeFontSize}">
+                            <TreeView.Styles>
+                                <Style Selector="TreeViewItem">
+                                    <Setter Property="MinHeight"
+                                            Value="{Binding DataContext.TreeItemMinHeight, RelativeSource={RelativeSource AncestorType=TreeView}}" />
+                                    <Setter Property="Padding"
+                                            Value="{Binding DataContext.TreeItemPadding, RelativeSource={RelativeSource AncestorType=TreeView}}" />
+                                </Style>
+                                <Style Selector="TreeViewItem /template/ ToggleButton#PART_ExpandCollapseChevron">
+                                    <Setter Property="Width"
+                                            Value="{Binding DataContext.TreeExpanderSize, RelativeSource={RelativeSource AncestorType=TreeView}}" />
+                                    <Setter Property="Height"
+                                            Value="{Binding DataContext.TreeExpanderSize, RelativeSource={RelativeSource AncestorType=TreeView}}" />
+                                </Style>
+                                <Style Selector="TreeViewItem /template/ Panel#PART_ExpandCollapseChevronContainer">
+                                    <Setter Property="Margin"
+                                            Value="{Binding DataContext.TreeExpanderMargin, RelativeSource={RelativeSource AncestorType=TreeView}}" />
+                                </Style>
+                            </TreeView.Styles>
                             <TreeView.ItemTemplate>
                                 <TreeDataTemplate ItemsSource="{Binding Children}" DataType="models:DocumentNode">
-                                    <Border Padding="4" CornerRadius="4">
+                                    <Border Padding="{Binding DataContext.TreeItemPadding, RelativeSource={RelativeSource AncestorType=TreeView}}"
+                                            CornerRadius="4">
                                         <Border.Background>
                                             <Binding Path="SearchBackground" />
                                         </Border.Background>

@@ -24,14 +24,15 @@ public class DocumentNode
     {
         get
         {
+            if (!string.IsNullOrWhiteSpace(Value))
+            {
+                var text = string.IsNullOrWhiteSpace(Name) ? Value : $"{Name}: {Value}";
+                return Children.Count > 0 ? $"{text} ({Children.Count})" : text;
+            }
+
             if (Children.Count > 0)
             {
                 return string.IsNullOrWhiteSpace(Name) ? $"({Children.Count})" : $"{Name} ({Children.Count})";
-            }
-
-            if (!string.IsNullOrWhiteSpace(Value))
-            {
-                return string.IsNullOrWhiteSpace(Name) ? Value : $"{Name}: {Value}";
             }
 
             return string.IsNullOrWhiteSpace(Name) ? "Nodo" : Name;

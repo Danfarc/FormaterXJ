@@ -190,6 +190,17 @@ public class DocumentFormatterTests
     }
 
     [Fact]
+    public void ShowsXmlElementValueInTreeWhenElementHasAttributes()
+    {
+        var root = new XmlTreeBuilder().Build(
+            "<envio><numeroSeguimiento tipo=\"guia\">DHL-998231-XYZ</numeroSeguimiento></envio>");
+        var trackingNumber = root.Children[0];
+
+        Assert.Equal("DHL-998231-XYZ", trackingNumber.Value);
+        Assert.Equal("numeroSeguimiento: DHL-998231-XYZ (1)", trackingNumber.DisplayText);
+    }
+
+    [Fact]
     public void FindsSearchMatchesCaseInsensitiveAcrossAttributesAndValues()
     {
         var builder = new XmlTreeBuilder();
@@ -222,6 +233,28 @@ public class DocumentFormatterTests
 
         viewModel.InputText = "line one\r\nline two\nline three";
         Assert.Equal($"1{Environment.NewLine}2{Environment.NewLine}3", viewModel.LineNumbersText);
+    }
+
+    [Fact]
+    public void UsesTenPointEditorFontByDefault()
+    {
+        var viewModel = new MainViewModel();
+
+        Assert.Equal(10, viewModel.EditorFontSize);
+    }
+
+    [Fact]
+    public void ScalesTreeExpanderAndSpacingWithTreeFontSize()
+    {
+        var viewModel = new MainViewModel
+        {
+            TreeFontSize = 18
+        };
+
+        Assert.Equal(18 * 12d / 13, viewModel.TreeExpanderSize, 10);
+        Assert.Equal(18 * 28d / 13, viewModel.TreeItemMinHeight, 10);
+        Assert.Equal(18 * 4d / 13, viewModel.TreeItemPadding.Left, 10);
+        Assert.Equal(18 * 12d / 13, viewModel.TreeExpanderMargin.Left, 10);
     }
 
     [Fact]

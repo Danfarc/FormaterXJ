@@ -59,7 +59,7 @@ dotnet test FormaterXJ.Tests/FormaterXJ.Tests.csproj
 - El menú `Opciones > Tema` ofrece los temas oscuro, claro y del sistema; oscuro es el tema inicial.
 - El menú `Opciones > Vista` agrupa los tamaños de letra independientes (10–18 pt) y la opción de numeración de líneas del editor.
 - Los textos y la franja de numeración usan recursos dinámicos del tema para conservar contraste en modo claro y oscuro; el check de numeración actualiza explícitamente el margen del editor.
-- El menú `Vista` permite configurar tamaños de letra independientes (10–18 pt) para editor y árbol, y activar/desactivar la numeración de líneas del editor (activada por defecto).
+- El menú `Vista` permite configurar tamaños de letra independientes (10–18 pt) para editor y árbol; al cambiar el tamaño del árbol también se ajustan el icono de expansión y el espaciado de los nodos. La numeración de líneas del editor se puede activar/desactivar (activada por defecto).
 - La franja numerada se muestra a la izquierda del editor, permanece separada del contenido y sincroniza su desplazamiento vertical; al formatear, refleja las líneas del texto formateado.
 - Al formatear correctamente, el editor se reemplaza por el contenido formateado; el árbol refleja el documento analizado.
 - Si el contenido está vacío, muestra un mensaje claro y no borra el texto original.

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Avalonia;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FormaterXJ.Models;
@@ -18,10 +19,22 @@ public partial class MainViewModel : ObservableObject
     private string lineNumbersText = "1";
 
     [ObservableProperty]
-    private double editorFontSize = 13;
+    private double editorFontSize = 10;
 
     [ObservableProperty]
     private double treeFontSize = 13;
+
+    [ObservableProperty]
+    private double treeExpanderSize = 12;
+
+    [ObservableProperty]
+    private double treeItemMinHeight = 28;
+
+    [ObservableProperty]
+    private Thickness treeItemPadding = new(4);
+
+    [ObservableProperty]
+    private Thickness treeExpanderMargin = new(12, 0);
 
     [ObservableProperty]
     private bool showLineNumbers = true;
@@ -69,6 +82,15 @@ public partial class MainViewModel : ObservableObject
     {
         var lineCount = Math.Max(1, value.Count(character => character == '\n') + 1);
         LineNumbersText = string.Join(Environment.NewLine, Enumerable.Range(1, lineCount));
+    }
+
+    partial void OnTreeFontSizeChanged(double value)
+    {
+        var scale = value / 13;
+        TreeExpanderSize = 12 * scale;
+        TreeItemMinHeight = 28 * scale;
+        TreeItemPadding = new Thickness(4 * scale);
+        TreeExpanderMargin = new Thickness(12 * scale, 0);
     }
 
     [RelayCommand]
