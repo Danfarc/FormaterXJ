@@ -15,7 +15,7 @@ public partial class ProfileEditorWindow : Window
         ProfileSelector.DisplayMemberBinding = new Avalonia.Data.Binding(nameof(UserProfile.Name));
         ThemeSelector.ItemsSource = new[] { "Dark", "Light", "System" };
         TreePositionSelector.ItemsSource = new[] { "Derecha", "Izquierda" };
-        TreeStyleSelector.ItemsSource = new[] { "Standard", "Compact", "Cards" };
+        TreeStyleSelector.ItemsSource = new[] { "Standard", "Compact", "Cards", "Explorer", "ExplorerXml" };
         EditorFontSelector.ItemsSource = new[] { 10d, 12d, 14d, 16d, 18d };
         TreeFontSelector.ItemsSource = new[] { 10d, 12d, 13d, 14d, 16d, 18d };
     }

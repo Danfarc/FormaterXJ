@@ -72,6 +72,14 @@
                                   ToggleType="Radio"
                                   IsChecked="{Binding IsCardTreeStyle}"
                                   Click="CardTreeStyle_Click" />
+                        <MenuItem Header="Explorador JSON"
+                                  ToggleType="Radio"
+                                  IsChecked="{Binding IsExplorerTreeStyle}"
+                                  Click="ExplorerTreeStyle_Click" />
+                        <MenuItem Header="Explorador XML"
+                                  ToggleType="Radio"
+                                  IsChecked="{Binding IsExplorerXmlStyleSelected}"
+                                  Click="ExplorerXmlTreeStyle_Click" />
                     </MenuItem>
                     <MenuItem Header="Tema">
                         <MenuItem Header="Oscuro"
@@ -228,8 +236,42 @@
                                         <Border.Background>
                                             <Binding Path="SearchBackground" />
                                         </Border.Background>
-                                        <TextBlock Text="{Binding DisplayText}"
-                                                   TextTrimming="CharacterEllipsis" />
+                                        <StackPanel Orientation="Horizontal" Spacing="7">
+                                            <TextBlock Text="{Binding ExplorerIcon}"
+                                                       FontSize="{Binding ExplorerIconFontSize}"
+                                                       FontWeight="Bold"
+                                                       Foreground="{Binding ExplorerIconBrush}"
+                                                       VerticalAlignment="Center"
+                                                       IsVisible="{Binding DataContext.IsExplorerTreeStyle, RelativeSource={RelativeSource AncestorType=TreeView}}" />
+                                            <TextBlock Text="{Binding XmlExplorerIcon}"
+                                                       FontSize="{Binding ExplorerIconFontSize}"
+                                                       FontWeight="Bold"
+                                                       Foreground="{Binding XmlExplorerIconBrush}"
+                                                       VerticalAlignment="Center"
+                                                       IsVisible="{Binding DataContext.IsExplorerXmlTreeStyle, RelativeSource={RelativeSource AncestorType=TreeView}}" />
+                                            <TextBlock Text="{Binding ExplorerLabel}"
+                                                       Foreground="{Binding ExplorerForegroundBrush}"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       IsVisible="{Binding DataContext.IsExplorerTreeStyle, RelativeSource={RelativeSource AncestorType=TreeView}}" />
+                                            <StackPanel Orientation="Horizontal"
+                                                        Spacing="8"
+                                                        IsVisible="{Binding DataContext.IsExplorerXmlTreeStyle, RelativeSource={RelativeSource AncestorType=TreeView}}">
+                                                <TextBlock Text="{Binding XmlExplorerLabel}"
+                                                           Foreground="{Binding XmlExplorerForegroundBrush}"
+                                                           VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding XmlExplorerContentLabel}"
+                                                           Foreground="{Binding XmlExplorerContentBrush}"
+                                                           VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           IsVisible="{Binding HasXmlExplorerContent}" />
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding DisplayText}"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       IsVisible="{Binding DataContext.IsDefaultTreePresentation, RelativeSource={RelativeSource AncestorType=TreeView}}" />
+                                        </StackPanel>
                                     </Border>
                                 </TreeDataTemplate>
                             </TreeView.ItemTemplate>

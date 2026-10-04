@@ -154,7 +154,7 @@ public sealed class UserProfileService
             || !Array.Exists(AvailableFontSizes, size => size == profile.EditorFontSize)
             || !Array.Exists(AvailableFontSizes, size => size == profile.TreeFontSize)
             || profile.Theme is not ("Dark" or "Light" or "System")
-            || profile.TreeStyle is not ("Standard" or "Compact" or "Cards"))
+            || profile.TreeStyle is not ("Standard" or "Compact" or "Cards" or "Explorer" or "ExplorerXml"))
         {
             throw new InvalidDataException("El perfil contiene valores no compatibles.");
         }

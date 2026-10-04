@@ -15,6 +15,31 @@ public sealed class XmlTreeBuilder
         return BuildNode(root, $"/{root.Name.LocalName}");
     }
 
+    public DocumentNode BuildExplorerRoot(string xmlText, DocumentNode elementRoot)
+    {
+        var document = XDocument.Parse(xmlText);
+        var root = new DocumentNode
+        {
+            Name = "XML",
+            Path = "/",
+            Type = "Documento XML"
+        };
+
+        if (document.Declaration is { } declaration)
+        {
+            root.AddChild(new DocumentNode
+            {
+                Name = "xml",
+                Path = "/?xml",
+                Type = "Declaración XML",
+                Value = declaration.ToString()
+            });
+        }
+
+        root.Children.Add(elementRoot);
+        return root;
+    }
+
     private static DocumentNode BuildNode(XElement element, string path)
     {
         var node = new DocumentNode

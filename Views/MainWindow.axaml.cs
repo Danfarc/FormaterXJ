@@ -278,6 +278,22 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ExplorerTreeStyle_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.TreeStyle = "Explorer";
+        }
+    }
+
+    private void ExplorerXmlTreeStyle_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.TreeStyle = "ExplorerXml";
+        }
+    }
+
     private void LineNumbersMenuItem_Click(object sender, RoutedEventArgs e)
     {
         if (sender is MenuItem menuItem && DataContext is MainViewModel viewModel)
@@ -327,32 +343,29 @@ public partial class MainWindow : Window
 
     private void DarkTheme_Click(object sender, RoutedEventArgs e)
     {
+        Application.Current!.RequestedThemeVariant = ThemeVariant.Dark;
         if (DataContext is MainViewModel viewModel)
         {
             viewModel.Theme = "Dark";
         }
-
-        Application.Current!.RequestedThemeVariant = ThemeVariant.Dark;
     }
 
     private void LightTheme_Click(object sender, RoutedEventArgs e)
     {
+        Application.Current!.RequestedThemeVariant = ThemeVariant.Light;
         if (DataContext is MainViewModel viewModel)
         {
             viewModel.Theme = "Light";
         }
-
-        Application.Current!.RequestedThemeVariant = ThemeVariant.Light;
     }
 
     private void SystemTheme_Click(object sender, RoutedEventArgs e)
     {
+        Application.Current!.RequestedThemeVariant = ThemeVariant.Default;
         if (DataContext is MainViewModel viewModel)
         {
             viewModel.Theme = "System";
         }
-
-        Application.Current!.RequestedThemeVariant = ThemeVariant.Default;
     }
 
     private async void CreateProfileMenuItem_Click(object? sender, RoutedEventArgs e)
@@ -409,9 +422,9 @@ public partial class MainWindow : Window
             if (await editor.ShowDialog<bool>(this) && editor.EditedProfile is { } editedProfile)
             {
                 profileService.Save(editedProfile.Name, editedProfile);
+                ApplyTheme(editedProfile.Theme);
                 currentViewModel.ApplyProfile(editedProfile);
                 currentViewModel.ProfileStatus = $"Perfil «{editedProfile.Name}» actualizado.";
-                ApplyTheme(editedProfile.Theme);
             }
         }
         catch (Exception exception) when (exception is IOException
@@ -480,9 +493,9 @@ public partial class MainWindow : Window
             if (await picker.ShowDialog<bool>(this) && picker.SelectedProfileName is { } selectedName)
             {
                 var profile = profileService.Load(selectedName);
+                ApplyTheme(profile.Theme);
                 currentViewModel.ApplyProfile(profile);
                 currentViewModel.ProfileStatus = $"Perfil «{selectedName}» cargado.";
-                ApplyTheme(profile.Theme);
             }
         }
         catch (Exception exception) when (exception is IOException

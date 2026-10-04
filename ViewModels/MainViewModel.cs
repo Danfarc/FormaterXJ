@@ -115,6 +115,7 @@ public partial class MainViewModel : ObservableObject
     private string selectedNodeDetail = string.Empty;
 
     private DocumentNode? rootDocument;
+    private DocumentNode? xmlExplorerDocument;
     private IReadOnlyList<DocumentNode> searchMatches = Array.Empty<DocumentNode>();
     private IReadOnlyList<SearchResult> searchResults = Array.Empty<SearchResult>();
     private int currentSearchIndex;
@@ -133,6 +134,14 @@ public partial class MainViewModel : ObservableObject
     public bool IsCompactTreeStyle => TreeStyle == "Compact";
 
     public bool IsCardTreeStyle => TreeStyle == "Cards";
+
+    public bool IsExplorerTreeStyle => TreeStyle == "Explorer";
+
+    public bool IsExplorerXmlStyleSelected => TreeStyle == "ExplorerXml";
+
+    public bool IsExplorerXmlTreeStyle => TreeStyle == "ExplorerXml" && DetectedFormat == "XML";
+
+    public bool IsDefaultTreePresentation => !IsExplorerTreeStyle && !IsExplorerXmlTreeStyle;
 
     public bool HasProfileStatus => !string.IsNullOrEmpty(ProfileStatus);
 
@@ -160,6 +169,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsDarkTheme));
         OnPropertyChanged(nameof(IsLightTheme));
         OnPropertyChanged(nameof(IsSystemTheme));
+        UpdateDocumentNodeTheme();
     }
 
     partial void OnTreeStyleChanged(string value)
@@ -167,7 +177,19 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsStandardTreeStyle));
         OnPropertyChanged(nameof(IsCompactTreeStyle));
         OnPropertyChanged(nameof(IsCardTreeStyle));
+        OnPropertyChanged(nameof(IsExplorerTreeStyle));
+        OnPropertyChanged(nameof(IsExplorerXmlStyleSelected));
+        OnPropertyChanged(nameof(IsExplorerXmlTreeStyle));
+        OnPropertyChanged(nameof(IsDefaultTreePresentation));
         UpdateTreeStyleMetrics();
+        RefreshTreePresentation();
+    }
+
+    partial void OnDetectedFormatChanged(string value)
+    {
+        OnPropertyChanged(nameof(IsExplorerXmlTreeStyle));
+        OnPropertyChanged(nameof(IsDefaultTreePresentation));
+        RefreshTreePresentation();
     }
 
     partial void OnProfileStatusChanged(string value)
@@ -248,8 +270,18 @@ public partial class MainViewModel : ObservableObject
         RunSearch();
     }
 
-    partial void OnSelectedNodeChanged(DocumentNode? value)
+    partial void OnSelectedNodeChanged(DocumentNode? oldValue, DocumentNode? newValue)
     {
+        if (oldValue is not null)
+        {
+            oldValue.IsSelected = false;
+        }
+
+        if (newValue is not null)
+        {
+            newValue.IsSelected = true;
+        }
+
         if (!applyingSearchResult)
         {
             SearchSelectionStart = -1;
@@ -285,6 +317,16 @@ public partial class MainViewModel : ObservableObject
                 TreeHeaderBorderThickness = new Thickness(1);
                 TreeItemMargin = new Thickness(0, 2 * scale);
                 break;
+            case "Explorer":
+            case "ExplorerXml":
+                TreeExpanderSize = 12 * scale;
+                TreeItemMinHeight = 31 * scale;
+                TreeItemPadding = new Thickness(4 * scale, 3 * scale);
+                TreeExpanderMargin = new Thickness(9 * scale, 0);
+                TreeHeaderCornerRadius = new CornerRadius(2 * scale);
+                TreeHeaderBorderThickness = new Thickness(0);
+                TreeItemMargin = new Thickness(0);
+                break;
             default:
                 TreeExpanderSize = 12 * scale;
                 TreeItemMinHeight = 28 * scale;
@@ -316,7 +358,8 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        foreach (var node in Flatten(rootDocument))
+        var treeRoot = RootNodes.FirstOrDefault() ?? rootDocument;
+        foreach (var node in Flatten(treeRoot))
         {
             node.IsExpanded = isExpanded;
         }
@@ -327,6 +370,7 @@ public partial class MainViewModel : ObservableObject
     {
         ClearSearchState();
         rootDocument = null;
+        xmlExplorerDocument = null;
         ErrorMessage = string.Empty;
         ErrorLine = 0;
         ErrorColumn = 0;
@@ -369,7 +413,9 @@ public partial class MainViewModel : ObservableObject
         }
         else if (analysis.Kind == DocumentFormatKind.Xml)
         {
-            rootDocument = new XmlTreeBuilder().Build(InputText);
+            var xmlTreeBuilder = new XmlTreeBuilder();
+            rootDocument = xmlTreeBuilder.Build(InputText);
+            xmlExplorerDocument = xmlTreeBuilder.BuildExplorerRoot(InputText, rootDocument);
         }
         else
         {
@@ -379,8 +425,8 @@ public partial class MainViewModel : ObservableObject
         InputText = analysis.FormattedText;
         FormattedText = analysis.FormattedText;
         DocumentTextLocator.Locate(rootDocument, analysis.FormattedText, analysis.Kind);
-        RootNodes.Clear();
-        RootNodes.Add(rootDocument);
+        UpdateDocumentNodeTheme();
+        RefreshTreePresentation();
         SelectedNode = rootDocument;
         SelectedNodeDetail = rootDocument.DetailText;
 
@@ -639,5 +685,44 @@ public partial class MainViewModel : ObservableObject
                 yield return nested;
             }
         }
+    }
+
+    private void UpdateDocumentNodeTheme()
+    {
+        if (rootDocument is null)
+        {
+            return;
+        }
+
+        var isDark = IsDarkTheme
+            || (IsSystemTheme
+                && Avalonia.Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark);
+
+        foreach (var node in Flatten(rootDocument))
+        {
+            node.IsDarkTheme = isDark;
+        }
+
+        if (xmlExplorerDocument is not null)
+        {
+            foreach (var node in Flatten(xmlExplorerDocument))
+            {
+                node.IsDarkTheme = isDark;
+            }
+        }
+    }
+
+    private void RefreshTreePresentation()
+    {
+        RootNodes.Clear();
+        if (rootDocument is null)
+        {
+            return;
+        }
+
+        var presentationRoot = IsExplorerXmlTreeStyle && xmlExplorerDocument is not null
+            ? xmlExplorerDocument
+            : rootDocument;
+        RootNodes.Add(presentationRoot);
     }
 }

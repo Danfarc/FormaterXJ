@@ -259,6 +259,62 @@ public class DocumentFormatterTests
     }
 
     [Fact]
+    public void ExplorerTreeFormatsJsonContainersAndTypedValues()
+    {
+        var root = new JsonTreeBuilder().Build(
+            "{\"estudiantes\":[{\"id\":1,\"nombre\":\"Ana\",\"activo\":true}]}");
+        var students = root.Children[0];
+        var student = students.Children[0];
+
+        Assert.Equal("{}", root.ExplorerIcon);
+        Assert.Equal("JSON", root.ExplorerLabel);
+        Assert.Equal("[]", students.ExplorerIcon);
+        Assert.Equal("estudiantes", students.ExplorerLabel);
+        Assert.Equal("{}", student.ExplorerIcon);
+        Assert.Equal("0", student.ExplorerLabel);
+        Assert.Equal("id: 1", student.Children[0].ExplorerLabel);
+        Assert.Equal("nombre: \"Ana\"", student.Children[1].ExplorerLabel);
+        Assert.Equal("activo: true", student.Children[2].ExplorerLabel);
+    }
+
+    [Fact]
+    public void XmlExplorerDistinguishesDeclarationRootElementsAttributesAndContent()
+    {
+        const string xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?><envio id=\"42\"><numero>DHL-998231-XYZ</numero></envio>";
+        var builder = new XmlTreeBuilder();
+        var rootElement = builder.Build(xml);
+        var explorerRoot = builder.BuildExplorerRoot(xml, rootElement);
+
+        Assert.Equal("Documento XML", explorerRoot.Type);
+        Assert.Equal("Declaración XML", explorerRoot.Children[0].Type);
+        Assert.Equal("<?xml version=\"1.0\" encoding=\"utf-8\"?>", explorerRoot.Children[0].Value);
+        Assert.Equal("Elemento raíz: <envio>", rootElement.XmlExplorerLabel);
+        Assert.Equal("Atributo: id", rootElement.Children[0].XmlExplorerLabel);
+        Assert.Equal("Elemento: <numero>", rootElement.Children[1].XmlExplorerLabel);
+        Assert.Equal("Contenido: DHL-998231-XYZ", rootElement.Children[1].XmlExplorerContentLabel);
+        Assert.True(rootElement.Children[1].HasXmlExplorerContent);
+    }
+
+    [Fact]
+    public void XmlExplorerStyleShowsDeclarationAndReturnsToDocumentRootWhenChanged()
+    {
+        var viewModel = new MainViewModel();
+        viewModel.LoadText("<?xml version=\"1.0\"?><root><item>value</item></root>");
+
+        viewModel.TreeStyle = "ExplorerXml";
+
+        Assert.True(viewModel.IsExplorerXmlStyleSelected);
+        Assert.True(viewModel.IsExplorerXmlTreeStyle);
+        Assert.Equal("Documento XML", viewModel.RootNodes[0].Type);
+        Assert.Equal(2, viewModel.RootNodes[0].Children.Count);
+        Assert.Equal("Elemento", viewModel.RootNodes[0].Children[1].Type);
+
+        viewModel.TreeStyle = "Standard";
+
+        Assert.Equal("root", viewModel.RootNodes[0].Name);
+    }
+
+    [Fact]
     public void BuildsFullXmlPathsAndIndexesRepeatedSiblings()
     {
         var root = new XmlTreeBuilder().Build(
@@ -468,6 +524,80 @@ public class DocumentFormatterTests
         Assert.Equal(1, viewModel.TreeHeaderBorderThickness.Left);
         Assert.Equal(8, viewModel.TreeHeaderCornerRadius.TopLeft);
         Assert.Equal(2, viewModel.TreeItemMargin.Top);
+
+        viewModel.TreeStyle = "Explorer";
+        Assert.True(viewModel.IsExplorerTreeStyle);
+        Assert.Equal(31, viewModel.TreeItemMinHeight);
+        Assert.Equal(0, viewModel.TreeHeaderBorderThickness.Left);
+    }
+
+    [Fact]
+    public void SelectedTreeNodeNotifiesExplorerHighlight()
+    {
+        var node = new DocumentNode();
+        var backgroundChanged = false;
+        node.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(DocumentNode.SearchBackground))
+            {
+                backgroundChanged = true;
+            }
+        };
+
+        node.IsSelected = true;
+
+        Assert.True(backgroundChanged);
+        Assert.Equal("#ffd9e8fa", node.SearchBackground.ToString());
+    }
+
+    [Fact]
+    public void SelectingAnotherTreeNodeClearsPreviousSelectionHighlight()
+    {
+        var viewModel = new MainViewModel();
+        var firstNode = new DocumentNode();
+        var secondNode = new DocumentNode();
+
+        viewModel.SelectedNode = firstNode;
+        viewModel.SelectedNode = secondNode;
+
+        Assert.False(firstNode.IsSelected);
+        Assert.True(secondNode.IsSelected);
+    }
+
+    [Fact]
+    public void ExplorerTreeUsesHighContrastColorsInDarkTheme()
+    {
+        var node = new DocumentNode
+        {
+            Type = "Object",
+            IsDarkTheme = true,
+            IsSelected = true
+        };
+
+        Assert.Equal("#ff8ab4f8", node.ExplorerIconBrush.ToString());
+        Assert.Equal("#fff1f3f4", node.ExplorerForegroundBrush.ToString());
+        Assert.Equal("#ff354d6b", node.SearchBackground.ToString());
+
+        node.IsCurrentSearchMatch = true;
+        Assert.Equal("#ff765b16", node.SearchBackground.ToString());
+    }
+
+    [Fact]
+    public void ExplorerTreeUpdatesNodeColorsWhenThemeChanges()
+    {
+        var viewModel = new MainViewModel
+        {
+            Theme = "Dark"
+        };
+        viewModel.LoadText("{\"value\":1}");
+
+        Assert.All(viewModel.RootNodes, node => Assert.True(node.IsDarkTheme));
+        Assert.True(viewModel.RootNodes[0].Children[0].IsDarkTheme);
+
+        viewModel.Theme = "Light";
+
+        Assert.False(viewModel.RootNodes[0].IsDarkTheme);
+        Assert.False(viewModel.RootNodes[0].Children[0].IsDarkTheme);
     }
 
     [Fact]
