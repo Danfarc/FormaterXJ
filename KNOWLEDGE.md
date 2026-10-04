@@ -7,7 +7,7 @@ FormaterXJ es una aplicación de escritorio multiplataforma desarrollada con Ava
 - `Program.cs`: punto de entrada de la aplicación. Configura Avalonia y arranca la ventana principal.
 - `App.axaml.cs`: carga el árbol XAML de la app y asigna la ventana principal.
 - `App.axaml`: define el estilo global y el `ViewLocator` de Avalonia.
-- `Views/MainWindow.axaml`: barras Archivo/Opciones/Formatear, editor con margen opcional de líneas, árbol y controles de búsqueda.
+- `Views/MainWindow.axaml`: barra Archivo/Opciones con el formato actual centrado, editor con margen opcional de líneas, árbol y controles de búsqueda.
 - `Views/MainWindow.axaml.cs`: lógica de UI y carga de archivo.
 - `ViewModels/MainViewModel.cs`: estado de la vista, detección de formato, formateo, árbol y navegación de búsquedas.
 - `Models/DocumentNode.cs`: nodos del árbol con propiedades, detalle y resaltado de coincidencias.
@@ -49,7 +49,7 @@ dotnet test FormaterXJ.Tests/FormaterXJ.Tests.csproj
 
 ## Behaviors clave
 - La ventana principal tiene dos paneles: el editor JSON/XML a la izquierda y el árbol de estructura a la derecha.
-- Los menús Archivo/Opciones se muestran integrados en el área de título de Avalonia; el espacio de esa franja permite arrastrar la ventana.
+- Los menús Archivo/Opciones y el formato actual centrado se muestran integrados en el área de título de Avalonia; el espacio libre permite arrastrar la ventana y el doble clic en él maximiza/restaura la ventana. Los controles nativos para cerrar, minimizar y maximizar permanecen sin cambios.
 - El divisor vertical entre el editor y el árbol se puede arrastrar para cambiar el ancho de ambos paneles.
 - Al seleccionar un nodo del árbol, el editor selecciona y resalta su bloque completo (objeto/arreglo JSON o elemento XML; propiedad/atributo completa); al mover la selección en el editor, se selecciona y desplaza a la vista el nodo correspondiente del árbol.
 - El resaltado del texto seleccionado en el editor usa un color visible y permanece visible cuando el editor pierde el foco; al enfocar un nodo se establece primero el caret y después el rango de selección para evitar colapsarlo.

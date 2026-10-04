@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
@@ -82,6 +83,19 @@ public partial class MainWindow : Window
     private void DocumentEditor_PastingFromClipboard(object? sender, RoutedEventArgs e)
     {
         Dispatcher.UIThread.Post(() => viewModel?.FormatDocumentCommand.Execute(null));
+    }
+
+    private void TitleBar_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.ClickCount != 2 || e.Source != sender)
+        {
+            return;
+        }
+
+        WindowState = WindowState == WindowState.Maximized
+            ? WindowState.Normal
+            : WindowState.Maximized;
+        e.Handled = true;
     }
 
     private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)

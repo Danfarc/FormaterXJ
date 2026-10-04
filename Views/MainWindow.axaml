@@ -20,12 +20,14 @@
     </Design.DataContext>
 
     <Grid RowDefinitions="36,*">
-        <DockPanel Grid.Row="0"
-                   LastChildFill="True"
-                   VerticalAlignment="Stretch"
-                   chrome:WindowDecorationProperties.ElementRole="TitleBar">
+        <Grid Grid.Row="0"
+              Background="Transparent"
+              VerticalAlignment="Stretch"
+              PointerPressed="TitleBar_PointerPressed"
+              chrome:WindowDecorationProperties.ElementRole="TitleBar">
             <Menu Padding="8,2"
                   VerticalAlignment="Center"
+                  HorizontalAlignment="Left"
                   chrome:WindowDecorationProperties.ElementRole="User">
                 <MenuItem Header="Archivo">
                     <MenuItem Header="Abrir..." Click="OpenMenuItem_Click" />
@@ -69,7 +71,11 @@
                     </MenuItem>
                 </MenuItem>
             </Menu>
-        </DockPanel>
+            <TextBlock Text="{Binding DetectedFormat}"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center"
+                       IsHitTestVisible="False" />
+        </Grid>
 
         <Grid Grid.Row="1" RowDefinitions="*,Auto,Auto" Margin="16">
             <Grid ColumnDefinitions="*,8,*">
@@ -77,47 +83,37 @@
                         BorderThickness="1"
                         CornerRadius="8"
                         Padding="10">
-                    <Grid RowDefinitions="Auto,Auto,*">
-                        <TextBlock Text="Documento"
-                                   FontSize="16"
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,0,8" />
-                        <TextBlock Grid.Row="1"
-                                   Text="{Binding DetectedFormat, StringFormat='Formato detectado: {0}'}"
-                                   Foreground="{DynamicResource ThemeForegroundBrush}"
-                                   Margin="0,0,0,8" />
-                        <Grid Grid.Row="2" ColumnDefinitions="Auto,*">
-                            <Border IsVisible="{Binding ShowLineNumbers, Mode=OneWay}"
-                                    Background="{DynamicResource ThemeBackgroundBrush}"
-                                    BorderBrush="{DynamicResource ThemeForegroundBrush}"
-                                    BorderThickness="0,0,1,0"
-                                    MinWidth="36">
-                                <ScrollViewer x:Name="LineNumberScrollViewer"
-                                              VerticalScrollBarVisibility="Hidden"
-                                              HorizontalScrollBarVisibility="Disabled">
-                                    <TextBlock Text="{Binding LineNumbersText}"
-                                               FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
-                                               FontSize="{Binding EditorFontSize}"
-                                               TextAlignment="Right"
-                                               Foreground="{DynamicResource ThemeForegroundBrush}"
-                                               Opacity="0.65"
-                                               Padding="6,4" />
-                                </ScrollViewer>
-                            </Border>
-                            <TextBox x:Name="DocumentEditor"
-                                     Grid.Column="1"
-                                     Text="{Binding InputText}"
-                                     PlaceholderText="Pega o escribe tu JSON o XML aquí..."
-                                     AcceptsReturn="True"
-                                     TextWrapping="NoWrap"
-                                     FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
-                                     FontSize="{Binding EditorFontSize}"
-                                     PastingFromClipboard="DocumentEditor_PastingFromClipboard"
-                                     SelectionBrush="#FFB900"
-                                     SelectionForegroundBrush="#202020"
-                                     IsInactiveSelectionHighlightEnabled="True"
-                                     ClearSelectionOnLostFocus="False" />
-                        </Grid>
+                    <Grid ColumnDefinitions="Auto,*">
+                        <Border IsVisible="{Binding ShowLineNumbers, Mode=OneWay}"
+                                Background="{DynamicResource ThemeBackgroundBrush}"
+                                BorderBrush="{DynamicResource ThemeForegroundBrush}"
+                                BorderThickness="0,0,1,0"
+                                MinWidth="36">
+                            <ScrollViewer x:Name="LineNumberScrollViewer"
+                                          VerticalScrollBarVisibility="Hidden"
+                                          HorizontalScrollBarVisibility="Disabled">
+                                <TextBlock Text="{Binding LineNumbersText}"
+                                           FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                                           FontSize="{Binding EditorFontSize}"
+                                           TextAlignment="Right"
+                                           Foreground="{DynamicResource ThemeForegroundBrush}"
+                                           Opacity="0.65"
+                                           Padding="6,4" />
+                            </ScrollViewer>
+                        </Border>
+                        <TextBox x:Name="DocumentEditor"
+                                 Grid.Column="1"
+                                 Text="{Binding InputText}"
+                                 PlaceholderText="Pega o escribe tu JSON o XML aquí..."
+                                 AcceptsReturn="True"
+                                 TextWrapping="NoWrap"
+                                 FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                                 FontSize="{Binding EditorFontSize}"
+                                 PastingFromClipboard="DocumentEditor_PastingFromClipboard"
+                                 SelectionBrush="#FFB900"
+                                 SelectionForegroundBrush="#202020"
+                                 IsInactiveSelectionHighlightEnabled="True"
+                                 ClearSelectionOnLostFocus="False" />
                     </Grid>
                 </Border>
 
@@ -134,12 +130,8 @@
                         BorderThickness="1"
                         CornerRadius="8"
                         Padding="10">
-                    <Grid RowDefinitions="Auto,*">
-                        <TextBlock Text="Estructura del documento"
-                                   FontSize="16"
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,0,8" />
-                        <TreeView Grid.Row="1"
+                    <Grid RowDefinitions="*">
+                        <TreeView Grid.Row="0"
                                   x:Name="StructureTree"
                                   ItemsSource="{Binding RootNodes}"
                                   SelectedItem="{Binding SelectedNode, Mode=TwoWay}"
