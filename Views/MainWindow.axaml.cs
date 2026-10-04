@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -11,6 +12,7 @@ using Avalonia.Threading;
 using Avalonia.Styling;
 using Avalonia.VisualTree;
 using FormaterXJ.Models;
+using FormaterXJ.Services;
 using FormaterXJ.ViewModels;
 
 namespace FormaterXJ.Views;
@@ -246,17 +248,109 @@ public partial class MainWindow : Window
 
     private void DarkTheme_Click(object sender, RoutedEventArgs e)
     {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.Theme = "Dark";
+        }
+
         Application.Current!.RequestedThemeVariant = ThemeVariant.Dark;
     }
 
     private void LightTheme_Click(object sender, RoutedEventArgs e)
     {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.Theme = "Light";
+        }
+
         Application.Current!.RequestedThemeVariant = ThemeVariant.Light;
     }
 
     private void SystemTheme_Click(object sender, RoutedEventArgs e)
     {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.Theme = "System";
+        }
+
         Application.Current!.RequestedThemeVariant = ThemeVariant.Default;
+    }
+
+    private async void SaveProfileMenuItem_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModel currentViewModel)
+        {
+            return;
+        }
+
+        var nameDialog = new ProfileNameWindow();
+        var shouldSave = await nameDialog.ShowDialog<bool>(this);
+        if (!shouldSave)
+        {
+            return;
+        }
+
+        try
+        {
+            var profileService = new UserProfileService(UserProfileService.DefaultProfilesDirectory);
+            profileService.Save(nameDialog.ProfileName, currentViewModel.CreateProfile());
+            currentViewModel.ProfileStatus = $"Perfil «{nameDialog.ProfileName}» guardado y activo.";
+            ApplyTheme(currentViewModel.Theme);
+        }
+        catch (Exception exception) when (exception is IOException
+            or InvalidDataException
+            or UnauthorizedAccessException
+            or InvalidOperationException)
+        {
+            currentViewModel.ProfileStatus = string.Empty;
+            currentViewModel.ErrorMessage = $"No se pudo guardar el perfil: {exception.Message}";
+        }
+    }
+
+    private async void SelectProfileMenuItem_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModel currentViewModel)
+        {
+            return;
+        }
+
+        try
+        {
+            var profileService = new UserProfileService(UserProfileService.DefaultProfilesDirectory);
+            var profiles = profileService.ListProfiles();
+            if (profiles.Count == 0)
+            {
+                currentViewModel.ProfileStatus = "No hay perfiles guardados.";
+                return;
+            }
+
+            var picker = new ProfilePickerWindow(profiles);
+            if (await picker.ShowDialog<bool>(this) && picker.SelectedProfileName is { } selectedName)
+            {
+                var profile = profileService.Load(selectedName);
+                currentViewModel.ApplyProfile(profile);
+                currentViewModel.ProfileStatus = $"Perfil «{selectedName}» cargado.";
+                ApplyTheme(profile.Theme);
+            }
+        }
+        catch (Exception exception) when (exception is IOException
+            or InvalidDataException
+            or UnauthorizedAccessException
+            or System.Text.Json.JsonException)
+        {
+            currentViewModel.ProfileStatus = string.Empty;
+            currentViewModel.ErrorMessage = $"No se pudo cargar el perfil: {exception.Message}";
+        }
+    }
+
+    private static void ApplyTheme(string theme)
+    {
+        Application.Current!.RequestedThemeVariant = theme switch
+        {
+            "Light" => ThemeVariant.Light,
+            "System" => ThemeVariant.Default,
+            _ => ThemeVariant.Dark
+        };
     }
 
     private async void SaveMenuItem_Click(object sender, RoutedEventArgs e)

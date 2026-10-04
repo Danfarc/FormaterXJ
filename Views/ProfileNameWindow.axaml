@@ -1,0 +1,31 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="FormaterXJ.Views.ProfileNameWindow"
+        Title="Guardar perfil"
+        Width="420"
+        SizeToContent="Height"
+        MinWidth="360"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+    <StackPanel Margin="20" Spacing="12">
+        <TextBlock Text="Nombre del perfil"
+                   FontSize="18"
+                   FontWeight="SemiBold" />
+        <TextBox x:Name="NameInput"
+                 PlaceholderText="Por ejemplo: Trabajo"
+                 KeyDown="NameInput_KeyDown" />
+        <TextBlock Text="Usa hasta 50 letras, números, espacios, guiones o guiones bajos."
+                   TextWrapping="Wrap" />
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8">
+            <Button Content="Cancelar"
+                    Click="Cancel_Click"
+                    Padding="16,8" />
+            <Button Content="Guardar"
+                    Click="Save_Click"
+                    IsDefault="True"
+                    Padding="16,8" />
+        </StackPanel>
+    </StackPanel>
+</Window>

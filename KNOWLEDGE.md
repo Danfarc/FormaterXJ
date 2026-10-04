@@ -55,7 +55,7 @@ dotnet test FormaterXJ.Tests/FormaterXJ.Tests.csproj
 - El resaltado del texto seleccionado en el editor usa un color visible y permanece visible cuando el editor pierde el foco; al enfocar un nodo se establece primero el caret y después el rango de selección para evitar colapsarlo.
 - La sincronización de la selección valida el rango del caret y solo se activa mientras el texto coincide con el último documento formateado.
 - El formateo se ejecuta automáticamente al pegar contenido en el editor o cargar un archivo desde `Archivo > Abrir`; escribir normalmente no dispara el análisis.
-- Abrir documento, guardar el resultado formateado y cerrar están en el menú `Archivo`; el menú `Buscar` abre una ventana con la consulta, opciones y navegación de resultados.
+- Abrir documento, guardar el resultado formateado, guardar con nombre o seleccionar un perfil de opciones y cerrar están en `Archivo`; los perfiles locales se pueden alternar y el último perfil activo se carga al iniciar. El menú `Buscar` abre una ventana con la consulta, opciones y navegación de resultados.
 - El menú `Opciones > Tema` ofrece los temas oscuro, claro y del sistema; oscuro es el tema inicial.
 - El menú `Opciones > Posición de los paneles` permite ubicar el árbol a la izquierda o derecha; el documento ocupa automáticamente el lado opuesto.
 - El menú `Opciones > Vista` agrupa los tamaños de letra independientes (10–18 pt) y la opción de numeración de líneas del editor.

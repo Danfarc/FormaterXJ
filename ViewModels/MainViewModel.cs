@@ -43,6 +43,12 @@ public partial class MainViewModel : ObservableObject
     private bool isTreeOnLeft;
 
     [ObservableProperty]
+    private string theme = "Dark";
+
+    [ObservableProperty]
+    private string profileStatus = string.Empty;
+
+    [ObservableProperty]
     private string formattedText = string.Empty;
 
     [ObservableProperty]
@@ -92,6 +98,14 @@ public partial class MainViewModel : ObservableObject
 
     private sealed record SearchResult(DocumentNode Node, int Start, int Length);
 
+    public bool IsDarkTheme => Theme == "Dark";
+
+    public bool IsLightTheme => Theme == "Light";
+
+    public bool IsSystemTheme => Theme == "System";
+
+    public bool HasProfileStatus => !string.IsNullOrEmpty(ProfileStatus);
+
     public int DocumentPanelColumn => IsTreeOnLeft ? 2 : 0;
 
     public int TreePanelColumn => IsTreeOnLeft ? 0 : 2;
@@ -107,6 +121,39 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsTreeOnRight));
         OnPropertyChanged(nameof(DocumentPanelColumn));
         OnPropertyChanged(nameof(TreePanelColumn));
+    }
+
+    partial void OnThemeChanged(string value)
+    {
+        OnPropertyChanged(nameof(IsDarkTheme));
+        OnPropertyChanged(nameof(IsLightTheme));
+        OnPropertyChanged(nameof(IsSystemTheme));
+    }
+
+    partial void OnProfileStatusChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasProfileStatus));
+    }
+
+    public void ApplyProfile(UserProfile profile)
+    {
+        EditorFontSize = profile.EditorFontSize;
+        TreeFontSize = profile.TreeFontSize;
+        ShowLineNumbers = profile.ShowLineNumbers;
+        IsTreeOnLeft = profile.IsTreeOnLeft;
+        Theme = profile.Theme;
+    }
+
+    public UserProfile CreateProfile()
+    {
+        return new UserProfile
+        {
+            EditorFontSize = EditorFontSize,
+            TreeFontSize = TreeFontSize,
+            ShowLineNumbers = ShowLineNumbers,
+            IsTreeOnLeft = IsTreeOnLeft,
+            Theme = Theme
+        };
     }
 
     partial void OnErrorMessageChanged(string value)

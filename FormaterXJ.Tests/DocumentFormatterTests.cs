@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using FormaterXJ.Models;
 using FormaterXJ.Services;
 using FormaterXJ.ViewModels;
@@ -390,6 +392,73 @@ public class DocumentFormatterTests
         Assert.False(viewModel.IsTreeOnLeft);
         Assert.Equal(0, viewModel.DocumentPanelColumn);
         Assert.Equal(2, viewModel.TreePanelColumn);
+    }
+
+    [Fact]
+    public void SavesAndLoadsUserProfileSettings()
+    {
+        var profilesDirectory = Path.Combine(Path.GetTempPath(), $"FormaterXJ-{Guid.NewGuid():N}");
+        var service = new UserProfileService(profilesDirectory);
+        var viewModel = new MainViewModel
+        {
+            EditorFontSize = 14,
+            TreeFontSize = 18,
+            ShowLineNumbers = false,
+            IsTreeOnLeft = true,
+            Theme = "Light"
+        };
+
+        try
+        {
+            service.Save("Trabajo", viewModel.CreateProfile());
+            var loadedProfile = service.Load("Trabajo");
+
+            Assert.NotNull(loadedProfile);
+            var restoredViewModel = new MainViewModel();
+            restoredViewModel.ApplyProfile(loadedProfile);
+
+            Assert.Equal(14, restoredViewModel.EditorFontSize);
+            Assert.Equal(18, restoredViewModel.TreeFontSize);
+            Assert.False(restoredViewModel.ShowLineNumbers);
+            Assert.True(restoredViewModel.IsTreeOnLeft);
+            Assert.Equal("Light", restoredViewModel.Theme);
+            Assert.Equal("Trabajo", loadedProfile.Name);
+            Assert.Equal("Trabajo", service.LoadActiveProfile()?.Name);
+            Assert.Equal(new[] { "Trabajo" }, service.ListProfiles());
+        }
+        finally
+        {
+            if (Directory.Exists(profilesDirectory))
+            {
+                Directory.Delete(profilesDirectory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void SavesAndSelectsMultipleNamedProfiles()
+    {
+        var profilesDirectory = Path.Combine(Path.GetTempPath(), $"FormaterXJ-{Guid.NewGuid():N}");
+        var service = new UserProfileService(profilesDirectory);
+
+        try
+        {
+            service.Save("Trabajo", new UserProfile { Theme = "Light" });
+            service.Save("Personal", new UserProfile { Theme = "System" });
+
+            Assert.Equal(new[] { "Personal", "Trabajo" }, service.ListProfiles());
+            Assert.Equal("System", service.Load("Personal").Theme);
+            Assert.Equal("Personal", service.LoadActiveProfile()?.Name);
+            Assert.Equal("Light", service.Load("Trabajo").Theme);
+            Assert.Equal("Trabajo", service.LoadActiveProfile()?.Name);
+        }
+        finally
+        {
+            if (Directory.Exists(profilesDirectory))
+            {
+                Directory.Delete(profilesDirectory, recursive: true);
+            }
+        }
     }
 
     [Fact]
