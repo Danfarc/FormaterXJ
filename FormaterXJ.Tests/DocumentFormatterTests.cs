@@ -199,6 +199,34 @@ public class DocumentFormatterTests
     }
 
     [Fact]
+    public void EditingDocumentValidatesSyntaxWithoutReplacingTextOrMovingCaret()
+    {
+        var viewModel = new MainViewModel
+        {
+            InputText = "{\"name\":\"Ana\"}"
+        };
+        viewModel.FormatDocumentCommand.Execute(null);
+        var errorNavigationRequest = viewModel.ErrorNavigationRequest;
+        var invalidInput = "{\n  \"name\": \"Ana\"\n  \"age\": 42\n}";
+
+        viewModel.InputText = invalidInput;
+
+        Assert.True(viewModel.HasError);
+        Assert.True(viewModel.ErrorPosition >= 0);
+        Assert.True(viewModel.ErrorLine > 0);
+        Assert.True(viewModel.ErrorColumn > 0);
+        Assert.Equal(errorNavigationRequest, viewModel.ErrorNavigationRequest);
+        Assert.Equal(invalidInput, viewModel.InputText);
+
+        viewModel.InputText = "{\"name\":\"Ana\",\"age\":42}";
+
+        Assert.False(viewModel.HasError);
+        Assert.Equal(-1, viewModel.ErrorPosition);
+        Assert.Equal(errorNavigationRequest, viewModel.ErrorNavigationRequest);
+        Assert.Equal($"{{{Environment.NewLine}  \"name\": \"Ana\"{Environment.NewLine}}}", viewModel.FormattedText);
+    }
+
+    [Fact]
     public void RejectsEmptyInput()
     {
         var result = DocumentFormatter.Analyze("   \r\n\t ");
@@ -507,6 +535,46 @@ public class DocumentFormatterTests
                 Directory.Delete(profilesDirectory, recursive: true);
             }
         }
+    }
+
+    [Fact]
+    public void RecentFilesAreDeduplicatedAndLimitedToTen()
+    {
+        var recentFilesPath = Path.Combine(Path.GetTempPath(), $"FormaterXJ-{Guid.NewGuid():N}.json");
+        var service = new RecentFilesService(recentFilesPath);
+
+        try
+        {
+            for (var index = 0; index < RecentFilesService.MaximumRecentFiles + 2; index++)
+            {
+                service.Add(Path.Combine(Path.GetTempPath(), $"document-{index}.json"));
+            }
+
+            service.Add(Path.Combine(Path.GetTempPath(), "document-5.json"));
+
+            var recentFiles = service.Load();
+            Assert.Equal(RecentFilesService.MaximumRecentFiles, recentFiles.Count);
+            Assert.Equal(Path.GetFullPath(Path.Combine(Path.GetTempPath(), "document-5.json")), recentFiles[0]);
+            Assert.DoesNotContain(recentFiles, path => path.EndsWith("document-0.json", StringComparison.Ordinal));
+        }
+        finally
+        {
+            if (File.Exists(recentFilesPath))
+            {
+                File.Delete(recentFilesPath);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("document.json", true)]
+    [InlineData("document.XML", true)]
+    [InlineData("document.txt", true)]
+    [InlineData("document.exe", false)]
+    [InlineData("", false)]
+    public void ChecksSupportedRecentFileTypes(string path, bool isSupported)
+    {
+        Assert.Equal(isSupported, RecentFilesService.IsSupportedFile(path));
     }
 
     [Fact]

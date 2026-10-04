@@ -184,6 +184,25 @@ public partial class MainViewModel : ObservableObject
     {
         var lineCount = Math.Max(1, value.Count(character => character == '\n') + 1);
         LineNumbersText = string.Join(Environment.NewLine, Enumerable.Range(1, lineCount));
+        ValidateDocumentInput(value);
+    }
+
+    private void ValidateDocumentInput(string input)
+    {
+        var analysis = DocumentFormatter.Analyze(input);
+        if (analysis.IsValid)
+        {
+            ErrorMessage = string.Empty;
+            ErrorLine = 0;
+            ErrorColumn = 0;
+            ErrorPosition = -1;
+            return;
+        }
+
+        ErrorMessage = analysis.ErrorMessage;
+        ErrorLine = analysis.ErrorLine;
+        ErrorColumn = analysis.ErrorColumn;
+        ErrorPosition = analysis.ErrorPosition;
     }
 
     partial void OnSearchTextChanged(string value)

@@ -13,6 +13,9 @@
         Loaded="MainWindow_Loaded"
         x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
+        DragDrop.AllowDrop="True"
+        DragDrop.DragOver="Window_DragOver"
+        DragDrop.Drop="Window_Drop"
         Title="">
 
     <Design.DataContext>
@@ -29,11 +32,16 @@
                   VerticalAlignment="Center"
                   HorizontalAlignment="Left"
                   chrome:WindowDecorationProperties.ElementRole="User">
-                <MenuItem Header="Archivo">
+                <MenuItem Header="Archivo"
+                          SubmenuOpened="FileMenu_SubmenuOpened">
                     <MenuItem Header="Abrir..." Click="OpenMenuItem_Click" />
                     <MenuItem Header="Guardar formateado..." Click="SaveMenuItem_Click" />
                     <MenuItem Header="Guardar perfil..." Click="SaveProfileMenuItem_Click" />
                     <MenuItem Header="Seleccionar perfil..." Click="SelectProfileMenuItem_Click" />
+                    <MenuItem x:Name="RecentFilesMenu" Header="Archivos recientes">
+                        <MenuItem Header="(Sin archivos recientes)"
+                                  IsEnabled="False" />
+                    </MenuItem>
                     <Separator />
                     <MenuItem Header="Cerrar" Click="CloseMenuItem_Click" />
                 </MenuItem>

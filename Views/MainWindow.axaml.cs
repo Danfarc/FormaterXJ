@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -430,6 +431,86 @@ public partial class MainWindow : Window
         await File.WriteAllTextAsync(file.Path.LocalPath, viewModel.FormattedText);
     }
 
+    private void FileMenu_SubmenuOpened(object? sender, RoutedEventArgs e)
+    {
+        RefreshRecentFilesMenu();
+    }
+
+    private void RefreshRecentFilesMenu()
+    {
+        RecentFilesMenu.Items.Clear();
+        IReadOnlyList<string> recentFiles;
+        try
+        {
+            recentFiles = new RecentFilesService(RecentFilesService.DefaultRecentFilesPath).Load();
+        }
+        catch (Exception exception) when (exception is IOException
+            or InvalidDataException
+            or UnauthorizedAccessException
+            or System.Text.Json.JsonException)
+        {
+            if (DataContext is MainViewModel currentViewModel)
+            {
+                currentViewModel.ErrorMessage = $"No se pudo leer la lista de archivos recientes: {exception.Message}";
+            }
+
+            return;
+        }
+
+        if (recentFiles.Count == 0)
+        {
+            RecentFilesMenu.Items.Add(new MenuItem
+            {
+                Header = "(Sin archivos recientes)",
+                IsEnabled = false
+            });
+            return;
+        }
+
+        foreach (var path in recentFiles)
+        {
+            var menuItem = new MenuItem
+            {
+                Header = Path.GetFileName(path),
+                Tag = path
+            };
+            ToolTip.SetTip(menuItem, path);
+            menuItem.Click += RecentFile_Click;
+            RecentFilesMenu.Items.Add(menuItem);
+        }
+    }
+
+    private async void RecentFile_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem { Tag: string path })
+        {
+            await LoadFileAsync(path);
+        }
+    }
+
+    private void Window_DragOver(object? sender, DragEventArgs e)
+    {
+        var files = e.DataTransfer.TryGetFiles();
+        e.DragEffects = files?.OfType<IStorageFile>()
+            .Any(file => RecentFilesService.IsSupportedFile(file.Path.LocalPath)) == true
+                ? DragDropEffects.Copy
+                : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private async void Window_Drop(object? sender, DragEventArgs e)
+    {
+        var file = e.DataTransfer.TryGetFiles()?.OfType<IStorageFile>()
+            .FirstOrDefault(item => RecentFilesService.IsSupportedFile(item.Path.LocalPath));
+        if (file is null)
+        {
+            return;
+        }
+
+        e.Handled = true;
+        await LoadFileAsync(file.Path.LocalPath);
+    }
+
     private void CloseMenuItem_Click(object sender, RoutedEventArgs e)
     {
         Close();
@@ -456,10 +537,40 @@ public partial class MainWindow : Window
             return;
         }
 
-        var content = await File.ReadAllTextAsync(file.Path.LocalPath);
-        if (DataContext is MainViewModel viewModel)
+        await LoadFileAsync(file.Path.LocalPath);
+    }
+
+    private async Task LoadFileAsync(string path)
+    {
+        if (!RecentFilesService.IsSupportedFile(path))
         {
-            viewModel.LoadText(content);
+            if (DataContext is MainViewModel viewModel)
+            {
+                viewModel.ErrorMessage = "El archivo debe tener extensión JSON, XML o TXT.";
+            }
+
+            return;
+        }
+
+        try
+        {
+            var content = await File.ReadAllTextAsync(path);
+            if (DataContext is MainViewModel currentViewModel)
+            {
+                currentViewModel.LoadText(content);
+                new RecentFilesService(RecentFilesService.DefaultRecentFilesPath).Add(path);
+                RefreshRecentFilesMenu();
+            }
+        }
+        catch (Exception exception) when (exception is IOException
+            or InvalidDataException
+            or UnauthorizedAccessException
+            or System.Text.Json.JsonException)
+        {
+            if (DataContext is MainViewModel currentViewModel)
+            {
+                currentViewModel.ErrorMessage = $"No se pudo abrir el archivo: {exception.Message}";
+            }
         }
     }
 
