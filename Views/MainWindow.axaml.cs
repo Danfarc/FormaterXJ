@@ -6,8 +6,10 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using Avalonia.Styling;
 using Avalonia.VisualTree;
+using FormaterXJ.Models;
 using FormaterXJ.ViewModels;
 
 namespace FormaterXJ.Views;
@@ -16,6 +18,8 @@ public partial class MainWindow : Window
 {
     private ScrollViewer? editorScrollViewer;
     private ScrollViewer? lineNumberScrollViewer;
+    private MainViewModel? viewModel;
+    private bool synchronizingFromEditor;
 
     public MainWindow()
     {
@@ -28,10 +32,114 @@ public partial class MainWindow : Window
             .OfType<ScrollViewer>()
             .FirstOrDefault();
         lineNumberScrollViewer = LineNumberScrollViewer;
+        viewModel = DataContext as MainViewModel;
 
         if (editorScrollViewer is not null)
         {
             editorScrollViewer.ScrollChanged += EditorScrollViewer_ScrollChanged;
+        }
+
+        DocumentEditor.PropertyChanged += DocumentEditor_PropertyChanged;
+        if (viewModel is not null)
+        {
+            viewModel.PropertyChanged += ViewModel_PropertyChanged;
+        }
+    }
+
+    private void DocumentEditor_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        if (synchronizingFromEditor
+            || (e.Property != TextBox.CaretIndexProperty
+                && e.Property != TextBox.SelectionStartProperty
+                && e.Property != TextBox.SelectionEndProperty))
+        {
+            return;
+        }
+
+        if (viewModel is null || viewModel.InputText != viewModel.FormattedText)
+        {
+            return;
+        }
+
+        synchronizingFromEditor = true;
+        try
+        {
+            var position = DocumentEditor.SelectionStart != DocumentEditor.SelectionEnd
+                ? DocumentEditor.SelectionStart
+                : DocumentEditor.CaretIndex;
+            viewModel.SelectNodeAtEditorPosition(position);
+            if (viewModel.SelectedNode is not null)
+            {
+                BringNodeIntoView(viewModel.SelectedNode);
+            }
+        }
+        finally
+        {
+            synchronizingFromEditor = false;
+        }
+    }
+
+    private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(MainViewModel.SelectedNode)
+            || synchronizingFromEditor
+            || viewModel?.InputText != viewModel?.FormattedText
+            || viewModel?.SelectedNode is not { EditorStart: >= 0 } node)
+        {
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (viewModel.SelectedNode != node)
+            {
+                return;
+            }
+
+            BringNodeIntoView(node);
+            synchronizingFromEditor = true;
+            try
+            {
+                var selectionStart = node.EditorBlockStart >= 0 ? node.EditorBlockStart : node.EditorStart;
+                var selectionLength = node.EditorBlockStart >= 0 ? node.EditorBlockLength : node.EditorLength;
+                DocumentEditor.CaretIndex = selectionStart;
+                DocumentEditor.SelectionStart = selectionStart;
+                DocumentEditor.SelectionEnd = selectionStart + selectionLength;
+                DocumentEditor.Focus();
+            }
+            finally
+            {
+                synchronizingFromEditor = false;
+            }
+        });
+    }
+
+    private void BringNodeIntoView(DocumentNode node)
+    {
+        var ancestors = new System.Collections.Generic.Stack<DocumentNode>();
+        for (var parent = node.Parent; parent is not null; parent = parent.Parent)
+        {
+            ancestors.Push(parent);
+        }
+
+        ItemsControl containerOwner = StructureTree;
+        while (ancestors.Count > 0)
+        {
+            if (containerOwner.ContainerFromItem(ancestors.Pop()) is TreeViewItem parentContainer)
+            {
+                parentContainer.IsExpanded = true;
+                parentContainer.UpdateLayout();
+                containerOwner = parentContainer;
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        if (containerOwner.ContainerFromItem(node) is TreeViewItem nodeContainer)
+        {
+            nodeContainer.BringIntoView();
         }
     }
 

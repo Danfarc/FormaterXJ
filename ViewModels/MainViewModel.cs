@@ -116,6 +116,7 @@ public partial class MainViewModel : ObservableObject
 
         InputText = analysis.FormattedText;
         FormattedText = analysis.FormattedText;
+        DocumentTextLocator.Locate(rootDocument, analysis.FormattedText, analysis.Kind);
         RootNodes.Clear();
         RootNodes.Add(rootDocument);
         SelectedNode = rootDocument;
@@ -181,6 +182,50 @@ public partial class MainViewModel : ObservableObject
         SelectedNode = null;
         SelectedNodeDetail = string.Empty;
         ClearSearchState();
+    }
+
+    public void SelectNodeAtEditorPosition(int position)
+    {
+        if (rootDocument is null || InputText.Length == 0 || InputText != FormattedText)
+        {
+            return;
+        }
+
+        var safePosition = Math.Clamp(position, 0, InputText.Length);
+        var searchStart = Math.Min(safePosition, InputText.Length - 1);
+        var lineStart = InputText.LastIndexOf('\n', searchStart);
+        lineStart = lineStart < 0 ? 0 : lineStart + 1;
+
+        var lineEnd = InputText.IndexOf('\n', safePosition);
+        if (lineEnd < 0)
+        {
+            lineEnd = InputText.Length;
+        }
+
+        var candidate = Flatten(rootDocument)
+            .Where(node => node.EditorStart >= lineStart && node.EditorStart < lineEnd)
+            .OrderBy(node => node.EditorStart)
+            .LastOrDefault(node => node.EditorStart <= safePosition);
+
+        candidate ??= Flatten(rootDocument)
+            .Where(node => node.EditorStart >= 0)
+            .OrderBy(node => Math.Abs(node.EditorStart - safePosition))
+            .FirstOrDefault();
+
+        if (candidate is null)
+        {
+            return;
+        }
+
+        var parent = candidate.Parent;
+        while (parent is not null)
+        {
+            parent.IsExpanded = true;
+            parent = parent.Parent;
+        }
+
+        SelectedNode = candidate;
+        SelectedNodeDetail = candidate.DetailText;
     }
 
     public void RunSearch()

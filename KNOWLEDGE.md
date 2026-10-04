@@ -49,6 +49,10 @@ dotnet test FormaterXJ.Tests/FormaterXJ.Tests.csproj
 
 ## Behaviors clave
 - La ventana principal tiene dos paneles: el editor JSON/XML a la izquierda y el árbol de estructura a la derecha.
+- El divisor vertical entre el editor y el árbol se puede arrastrar para cambiar el ancho de ambos paneles.
+- Al seleccionar un nodo del árbol, el editor selecciona y resalta su bloque completo (objeto/arreglo JSON o elemento XML; propiedad/atributo completa); al mover la selección en el editor, se selecciona y desplaza a la vista el nodo correspondiente del árbol.
+- El resaltado del texto seleccionado en el editor usa un color visible y permanece visible cuando el editor pierde el foco; al enfocar un nodo se establece primero el caret y después el rango de selección para evitar colapsarlo.
+- La sincronización de la selección valida el rango del caret y solo se activa mientras el texto coincide con el último documento formateado.
 - `Formatear` está en la barra superior, junto al menú `Archivo`; abrir documento, guardar el resultado formateado y cerrar están en ese menú.
 - El menú `Opciones > Tema` ofrece los temas oscuro, claro y del sistema; oscuro es el tema inicial.
 - El menú `Opciones > Vista` agrupa los tamaños de letra independientes (10–18 pt) y la opción de numeración de líneas del editor.

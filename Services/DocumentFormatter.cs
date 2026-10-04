@@ -129,7 +129,7 @@ public static class DocumentFormatter
             IndentChars = "  ",
             NewLineChars = Environment.NewLine,
             NewLineHandling = NewLineHandling.Replace,
-            Encoding = Encoding.UTF8
+            Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false)
         };
 
         using var stream = new MemoryStream();

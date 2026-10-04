@@ -1,3 +1,4 @@
+using FormaterXJ.Models;
 using FormaterXJ.Services;
 using FormaterXJ.ViewModels;
 using Xunit;
@@ -27,6 +28,133 @@ public class DocumentFormatterTests
         Assert.Contains("<user", result.FormattedText);
         Assert.Contains("id=\"42\"", result.FormattedText);
         Assert.Contains("<name>Ana</name>", result.FormattedText);
+    }
+
+    [Fact]
+    public void FormatsXmlOutputAgainWithoutError()
+    {
+        var firstResult = DocumentFormatter.Analyze("<user id=\"42\"><name>Ana</name></user>");
+
+        Assert.True(firstResult.IsValid);
+        Assert.False(firstResult.FormattedText.StartsWith('\uFEFF'));
+
+        var secondResult = DocumentFormatter.Analyze(firstResult.FormattedText);
+
+        Assert.True(secondResult.IsValid, secondResult.ErrorMessage);
+        Assert.Equal(DocumentFormatKind.Xml, secondResult.Kind);
+    }
+
+    [Fact]
+    public void FormatsXmlTwiceThroughTheViewModel()
+    {
+        var viewModel = new MainViewModel
+        {
+            InputText = "<user id=\"42\"><name>Ana</name></user>"
+        };
+
+        viewModel.FormatDocumentCommand.Execute(null);
+        Assert.Empty(viewModel.ErrorMessage);
+
+        viewModel.FormatDocumentCommand.Execute(null);
+
+        Assert.Empty(viewModel.ErrorMessage);
+        Assert.Equal("XML", viewModel.DetectedFormat);
+        Assert.True(viewModel.HasValidDocument);
+    }
+
+    [Fact]
+    public void LocatesJsonPropertyAndXmlAttributeInFormattedText()
+    {
+        const string json = "{\n  \"name\": \"Ana\"\n}";
+        var jsonRoot = new JsonTreeBuilder().Build(json);
+        DocumentTextLocator.Locate(jsonRoot, json, DocumentFormatKind.Json);
+
+        var jsonProperty = jsonRoot.Children[0];
+        Assert.Equal("\"name\"", json.Substring(jsonProperty.EditorStart, jsonProperty.EditorLength));
+
+        const string xml = "<user id=\"42\"><name>Ana</name></user>";
+        var xmlRoot = new XmlTreeBuilder().Build(xml);
+        DocumentTextLocator.Locate(xmlRoot, xml, DocumentFormatKind.Xml);
+
+        var xmlAttribute = xmlRoot.Children[0];
+        Assert.Equal("id", xml.Substring(xmlAttribute.EditorStart, xmlAttribute.EditorLength));
+    }
+
+    [Fact]
+    public void LocatesCompleteJsonObjectAndPropertyBlocks()
+    {
+        const string json = "{\n  \"person\": {\n    \"name\": \"Ana\"\n  }\n}";
+        var root = new JsonTreeBuilder().Build(json);
+        DocumentTextLocator.Locate(root, json, DocumentFormatKind.Json);
+
+        var person = root.Children[0];
+        var personBlock = json.Substring(person.EditorBlockStart, person.EditorBlockLength);
+        Assert.Contains("\"person\"", personBlock);
+        Assert.Contains("\"name\": \"Ana\"", personBlock);
+        Assert.EndsWith("}", personBlock);
+
+        var name = person.Children[0];
+        var nameBlock = json.Substring(name.EditorBlockStart, name.EditorBlockLength);
+        Assert.Equal("\"name\": \"Ana\"", nameBlock.Trim());
+    }
+
+    [Fact]
+    public void LocatesCompleteXmlElementAndAttributeBlocks()
+    {
+        const string xml = "<user id=\"42\"><name>Ana</name></user>";
+        var root = new XmlTreeBuilder().Build(xml);
+        DocumentTextLocator.Locate(root, xml, DocumentFormatKind.Xml);
+
+        var userBlock = xml.Substring(root.EditorBlockStart, root.EditorBlockLength);
+        Assert.Equal(xml, userBlock);
+
+        var attribute = root.Children[0];
+        var attributeBlock = xml.Substring(attribute.EditorBlockStart, attribute.EditorBlockLength);
+        Assert.Equal("id=\"42\"", attributeBlock);
+    }
+
+    [Fact]
+    public void EditorPositionSelectsMatchingTreeNode()
+    {
+        var viewModel = new MainViewModel
+        {
+            InputText = "{\"name\":\"Ana\"}"
+        };
+        viewModel.FormatDocumentCommand.Execute(null);
+
+        var propertyPosition = viewModel.InputText.IndexOf("\"name\"", StringComparison.Ordinal);
+        viewModel.SelectNodeAtEditorPosition(propertyPosition);
+
+        Assert.Equal("name", viewModel.SelectedNode?.Name);
+    }
+
+    [Fact]
+    public void EditorPositionOutsideTextBoundsDoesNotThrow()
+    {
+        var viewModel = new MainViewModel
+        {
+            InputText = "{\"name\":\"Ana\"}"
+        };
+        viewModel.FormatDocumentCommand.Execute(null);
+
+        viewModel.SelectNodeAtEditorPosition(int.MaxValue);
+
+        Assert.NotNull(viewModel.SelectedNode);
+    }
+
+    [Fact]
+    public void EmptyEditorTextDoesNotThrowDuringSelectionSynchronization()
+    {
+        var viewModel = new MainViewModel
+        {
+            InputText = "{\"name\":\"Ana\"}"
+        };
+        viewModel.FormatDocumentCommand.Execute(null);
+        viewModel.InputText = string.Empty;
+
+        viewModel.SelectNodeAtEditorPosition(0);
+
+        Assert.Equal("Documento", viewModel.SelectedNode?.Name);
     }
 
     [Fact]

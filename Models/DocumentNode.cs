@@ -13,6 +13,10 @@ public class DocumentNode
     public bool IsExpanded { get; set; } = true;
     public bool IsSearchMatch { get; set; }
     public bool IsCurrentSearchMatch { get; set; }
+    public int EditorStart { get; set; } = -1;
+    public int EditorLength { get; set; }
+    public int EditorBlockStart { get; set; } = -1;
+    public int EditorBlockLength { get; set; }
     public DocumentNode? Parent { get; set; }
     public ObservableCollection<DocumentNode> Children { get; } = new();
 
