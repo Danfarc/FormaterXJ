@@ -99,7 +99,7 @@
         </Grid>
 
         <Grid Grid.Row="1" RowDefinitions="*,Auto,Auto" Margin="16">
-            <Grid ColumnDefinitions="*,8,*">
+            <Grid ColumnDefinitions="*,3,*">
                 <Border Grid.Column="{Binding DocumentPanelColumn}"
                         BorderBrush="#3A3A3A"
                         BorderThickness="1"
@@ -145,7 +145,7 @@
                               HorizontalAlignment="Stretch"
                               VerticalAlignment="Stretch"
                               Background="#707070"
-                              MinWidth="8" />
+                              MinWidth="3" />
 
                 <Border Grid.Column="{Binding TreePanelColumn}"
                         BorderBrush="#3A3A3A"
