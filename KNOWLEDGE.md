@@ -15,7 +15,7 @@ FormaterXJ es una aplicación de escritorio multiplataforma desarrollada con Ava
 - `Services/DocumentFormatter.cs`: detección y formateo de JSON/XML.
 - `Services/JsonTreeBuilder.cs`: construcción del árbol para JSON.
 - `Services/XmlTreeBuilder.cs`: construcción del árbol para XML.
-- `Services/SearchService.cs`: búsqueda insensible a mayúsculas y minúsculas.
+- `Services/SearchService.cs`: búsqueda configurable por mayúsculas/minúsculas y palabra completa.
 - `FormaterXJ.Tests/DocumentFormatterTests.cs`: pruebas unitarias de detección, formateo, árbol y búsqueda.
 
 ## Tecnologías principales
@@ -55,7 +55,7 @@ dotnet test FormaterXJ.Tests/FormaterXJ.Tests.csproj
 - El resaltado del texto seleccionado en el editor usa un color visible y permanece visible cuando el editor pierde el foco; al enfocar un nodo se establece primero el caret y después el rango de selección para evitar colapsarlo.
 - La sincronización de la selección valida el rango del caret y solo se activa mientras el texto coincide con el último documento formateado.
 - El formateo se ejecuta automáticamente al pegar contenido en el editor o cargar un archivo desde `Archivo > Abrir`; escribir normalmente no dispara el análisis.
-- Abrir documento, guardar el resultado formateado y cerrar están en el menú `Archivo`.
+- Abrir documento, guardar el resultado formateado y cerrar están en el menú `Archivo`; el menú `Buscar` abre una ventana con la consulta, opciones y navegación de resultados.
 - El menú `Opciones > Tema` ofrece los temas oscuro, claro y del sistema; oscuro es el tema inicial.
 - El menú `Opciones > Vista` agrupa los tamaños de letra independientes (10–18 pt) y la opción de numeración de líneas del editor.
 - Los textos y la franja de numeración usan recursos dinámicos del tema para conservar contraste en modo claro y oscuro; el check de numeración actualiza explícitamente el margen del editor.
@@ -65,8 +65,8 @@ dotnet test FormaterXJ.Tests/FormaterXJ.Tests.csproj
 - Si el contenido está vacío, muestra un mensaje claro y no borra el texto original.
 - Si el documento no es JSON ni XML válido, se informa el error sin bloquear la aplicación.
 - La estructura se presenta en un árbol con nodos expandibles y contraíbles.
-- La búsqueda busca en nombres, atributos, rutas y valores, ignorando mayúsculas/minúsculas.
-- La coincidencia actual se resalta y se puede navegar con `Anterior` y `Siguiente`.
+- La búsqueda busca en nombres, atributos, rutas y valores mientras se escribe, y selecciona cada coincidencia exacta también en el documento del editor; por defecto ignora mayúsculas/minúsculas y busca coincidencias parciales. La ventana `Buscar` ofrece opciones para distinguir mayúsculas/minúsculas y buscar palabras completas, muestra el estado y permite navegar con `Anterior`/`Siguiente`, Enter o Mayús+Enter sin perder el foco.
+- El resaltado de resultados del árbol notifica sus cambios para actualizarse al buscar y limpiar la consulta.
 - La lógica está separada entre UI, modelos, servicios y pruebas.
 
 ## Casos cubiertos

@@ -214,6 +214,59 @@ public class DocumentFormatterTests
     }
 
     [Fact]
+    public void SearchCanMatchCaseAndWholeWords()
+    {
+        var root = new JsonTreeBuilder().Build(
+            "{\"exact\":\"Ana\",\"embedded\":\"anagram\",\"capitalized\":\"ANAGRAM\",\"underscored\":\"_ana\"}");
+
+        var caseSensitiveMatches = SearchService.FindMatches(root, "Ana", matchCase: true);
+        var wholeWordMatches = SearchService.FindMatches(root, "ana", matchWholeWord: true);
+
+        Assert.Single(caseSensitiveMatches);
+        Assert.Single(wholeWordMatches);
+        Assert.Equal("exact", caseSensitiveMatches[0].Name);
+        Assert.Equal("exact", wholeWordMatches[0].Name);
+    }
+
+    [Fact]
+    public void SearchOptionsDefaultToNormalCaseInsensitivePartialSearch()
+    {
+        var viewModel = new MainViewModel();
+        var root = new JsonTreeBuilder().Build("{\"name\":\"ANAGRAM\"}");
+
+        Assert.False(viewModel.SearchMatchCase);
+        Assert.False(viewModel.SearchWholeWord);
+        Assert.Single(SearchService.FindMatches(root, "ana"));
+    }
+
+    [Fact]
+    public void DocumentSearchNavigatesAndSelectsEachExactOccurrence()
+    {
+        var viewModel = new MainViewModel
+        {
+            InputText = "{\"name\":\"Ana Ana\"}"
+        };
+        viewModel.FormatDocumentCommand.Execute(null);
+        viewModel.SearchText = "Ana";
+        var firstMatch = viewModel.FormattedText.IndexOf("Ana", StringComparison.Ordinal);
+
+        Assert.Equal(3, viewModel.SearchSelectionLength);
+        Assert.Equal(firstMatch, viewModel.SearchSelectionStart);
+        Assert.Equal("Coincidencia 1 de 2", viewModel.SearchStatus);
+
+        viewModel.SearchNextCommand.Execute(null);
+
+        var secondMatch = viewModel.FormattedText.IndexOf("Ana", firstMatch + 1, StringComparison.Ordinal);
+        Assert.Equal(secondMatch, viewModel.SearchSelectionStart);
+        Assert.Equal("Coincidencia 2 de 2", viewModel.SearchStatus);
+
+        viewModel.SearchPreviousCommand.Execute(null);
+
+        Assert.Equal(firstMatch, viewModel.SearchSelectionStart);
+        Assert.Equal("Coincidencia 1 de 2", viewModel.SearchStatus);
+    }
+
+    [Fact]
     public void ReturnsNoMatchesWhenNothingMatches()
     {
         var builder = new JsonTreeBuilder();
@@ -222,6 +275,65 @@ public class DocumentFormatterTests
         var matches = SearchService.FindMatches(root, "zzz");
 
         Assert.Empty(matches);
+    }
+
+    [Fact]
+    public void UpdatesSearchMatchesAndStatusAsQueryChanges()
+    {
+        var viewModel = new MainViewModel
+        {
+            InputText = "{\"name\":\"Ana\",\"role\":\"admin\"}"
+        };
+        viewModel.FormatDocumentCommand.Execute(null);
+
+        viewModel.SearchText = "ana";
+
+        Assert.Equal("Coincidencia 1 de 1", viewModel.SearchStatus);
+        Assert.Equal("name", viewModel.SelectedNode?.Name);
+        Assert.True(viewModel.SelectedNode?.IsCurrentSearchMatch);
+
+        viewModel.SearchText = "no existe";
+
+        Assert.Equal("Sin coincidencias", viewModel.SearchStatus);
+        Assert.False(viewModel.RootNodes[0].Children[0].IsSearchMatch);
+        Assert.False(viewModel.RootNodes[0].Children[0].IsCurrentSearchMatch);
+    }
+
+    [Fact]
+    public void ChangingSearchOptionsImmediatelyReappliesSearch()
+    {
+        var viewModel = new MainViewModel
+        {
+            InputText = "{\"name\":\"ANAGRAM\"}",
+            SearchText = "ana"
+        };
+        viewModel.FormatDocumentCommand.Execute(null);
+        Assert.Equal("Coincidencia 1 de 1", viewModel.SearchStatus);
+
+        viewModel.SearchMatchCase = true;
+        Assert.Equal("Sin coincidencias", viewModel.SearchStatus);
+
+        viewModel.SearchMatchCase = false;
+        viewModel.SearchWholeWord = true;
+        Assert.Equal("Sin coincidencias", viewModel.SearchStatus);
+    }
+
+    [Fact]
+    public void NotifiesWhenSearchHighlightChanges()
+    {
+        var node = new DocumentNode();
+        var searchBackgroundChanged = false;
+        node.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(DocumentNode.SearchBackground))
+            {
+                searchBackgroundChanged = true;
+            }
+        };
+
+        node.IsSearchMatch = true;
+
+        Assert.True(searchBackgroundChanged);
     }
 
     [Fact]

@@ -52,6 +52,18 @@ public partial class MainViewModel : ObservableObject
     private string searchText = string.Empty;
 
     [ObservableProperty]
+    private bool searchMatchCase;
+
+    [ObservableProperty]
+    private bool searchWholeWord;
+
+    [ObservableProperty]
+    private int searchSelectionStart = -1;
+
+    [ObservableProperty]
+    private int searchSelectionLength;
+
+    [ObservableProperty]
     private string searchStatus = "Sin búsqueda";
 
     [ObservableProperty]
@@ -71,7 +83,11 @@ public partial class MainViewModel : ObservableObject
 
     private DocumentNode? rootDocument;
     private IReadOnlyList<DocumentNode> searchMatches = Array.Empty<DocumentNode>();
+    private IReadOnlyList<SearchResult> searchResults = Array.Empty<SearchResult>();
     private int currentSearchIndex;
+    private bool applyingSearchResult;
+
+    private sealed record SearchResult(DocumentNode Node, int Start, int Length);
 
     partial void OnErrorMessageChanged(string value)
     {
@@ -82,6 +98,30 @@ public partial class MainViewModel : ObservableObject
     {
         var lineCount = Math.Max(1, value.Count(character => character == '\n') + 1);
         LineNumbersText = string.Join(Environment.NewLine, Enumerable.Range(1, lineCount));
+    }
+
+    partial void OnSearchTextChanged(string value)
+    {
+        RunSearch();
+    }
+
+    partial void OnSearchMatchCaseChanged(bool value)
+    {
+        RunSearch();
+    }
+
+    partial void OnSearchWholeWordChanged(bool value)
+    {
+        RunSearch();
+    }
+
+    partial void OnSelectedNodeChanged(DocumentNode? value)
+    {
+        if (!applyingSearchResult)
+        {
+            SearchSelectionStart = -1;
+            SearchSelectionLength = 0;
+        }
     }
 
     partial void OnTreeFontSizeChanged(double value)
@@ -163,13 +203,13 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        if (searchMatches.Count == 0)
+        if (searchResults.Count == 0)
         {
             SearchStatus = "Sin coincidencias";
             return;
         }
 
-        currentSearchIndex = (currentSearchIndex + 1) % searchMatches.Count;
+        currentSearchIndex = (currentSearchIndex + 1) % searchResults.Count;
         ApplyMatch(currentSearchIndex);
     }
 
@@ -182,13 +222,13 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        if (searchMatches.Count == 0)
+        if (searchResults.Count == 0)
         {
             SearchStatus = "Sin coincidencias";
             return;
         }
 
-        currentSearchIndex = (currentSearchIndex - 1 + searchMatches.Count) % searchMatches.Count;
+        currentSearchIndex = (currentSearchIndex - 1 + searchResults.Count) % searchResults.Count;
         ApplyMatch(currentSearchIndex);
     }
 
@@ -255,6 +295,9 @@ public partial class MainViewModel : ObservableObject
     {
         if (rootDocument is null)
         {
+            searchMatches = Array.Empty<DocumentNode>();
+            searchResults = Array.Empty<SearchResult>();
+            currentSearchIndex = 0;
             SearchStatus = "Primero formatea un documento.";
             return;
         }
@@ -262,14 +305,61 @@ public partial class MainViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(SearchText))
         {
             ClearSearchState();
+            searchMatches = Array.Empty<DocumentNode>();
+            searchResults = Array.Empty<SearchResult>();
+            currentSearchIndex = 0;
+            SearchSelectionStart = -1;
+            SearchSelectionLength = 0;
             SearchStatus = "Sin búsqueda";
             return;
         }
 
-        searchMatches = SearchService.FindMatches(rootDocument, SearchText);
-        if (searchMatches.Count == 0)
+        searchMatches = SearchService.FindMatches(
+            rootDocument,
+            SearchText,
+            SearchMatchCase,
+            SearchWholeWord);
+        var results = new List<SearchResult>();
+        foreach (var textMatch in SearchService.FindTextMatches(
+                     FormattedText,
+                     SearchText,
+                     SearchMatchCase,
+                     SearchWholeWord))
+        {
+            var node = FindNodeForTextMatch(textMatch.Start, textMatch.Length);
+            if (node is not null)
+            {
+                results.Add(new SearchResult(node, textMatch.Start, textMatch.Length));
+            }
+        }
+
+        foreach (var nodeMatch in searchMatches)
+        {
+            var nodeStart = nodeMatch.EditorBlockStart >= 0
+                ? nodeMatch.EditorBlockStart
+                : nodeMatch.EditorStart;
+            var nodeLength = nodeMatch.EditorBlockStart >= 0
+                ? nodeMatch.EditorBlockLength
+                : nodeMatch.EditorLength;
+            var hasDocumentMatch = results.Any(result =>
+                ReferenceEquals(result.Node, nodeMatch)
+                || (nodeStart >= 0
+                    && result.Start >= nodeStart
+                    && result.Start + result.Length <= nodeStart + nodeLength));
+
+            if (!hasDocumentMatch && nodeStart >= 0 && nodeLength > 0)
+            {
+                results.Add(new SearchResult(nodeMatch, nodeStart, nodeLength));
+            }
+        }
+
+        searchResults = results.OrderBy(result => result.Start).ToList();
+        if (searchResults.Count == 0)
         {
             ClearSearchState();
+            currentSearchIndex = 0;
+            SearchSelectionStart = -1;
+            SearchSelectionLength = 0;
             SearchStatus = "Sin coincidencias";
             return;
         }
@@ -280,14 +370,15 @@ public partial class MainViewModel : ObservableObject
 
     private void ApplyMatch(int index)
     {
-        if (rootDocument is null || searchMatches.Count == 0)
+        if (rootDocument is null || searchResults.Count == 0)
         {
             return;
         }
 
         ClearSearchState();
 
-        var selected = searchMatches[index];
+        var result = searchResults[index];
+        var selected = result.Node;
         selected.IsSearchMatch = true;
         selected.IsCurrentSearchMatch = true;
 
@@ -298,9 +389,29 @@ public partial class MainViewModel : ObservableObject
             current = current.Parent;
         }
 
+        applyingSearchResult = true;
         SelectedNode = selected;
+        applyingSearchResult = false;
         SelectedNodeDetail = selected.DetailText;
-        SearchStatus = $"Coincidencia {index + 1} de {searchMatches.Count}";
+        SearchSelectionStart = result.Start;
+        SearchSelectionLength = result.Length;
+        SearchStatus = $"Coincidencia {index + 1} de {searchResults.Count}";
+    }
+
+    private DocumentNode? FindNodeForTextMatch(int start, int length)
+    {
+        if (rootDocument is null)
+        {
+            return null;
+        }
+
+        return Flatten(rootDocument)
+            .Where(node => node.EditorBlockStart >= 0
+                && start >= node.EditorBlockStart
+                && start + length <= node.EditorBlockStart + node.EditorBlockLength)
+            .OrderBy(node => node.EditorBlockLength)
+            .FirstOrDefault()
+            ?? rootDocument;
     }
 
     private void ClearSearchState()

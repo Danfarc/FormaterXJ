@@ -1,0 +1,42 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:FormaterXJ.ViewModels"
+        x:Class="FormaterXJ.Views.SearchWindow"
+        x:DataType="vm:MainViewModel"
+        x:CompileBindings="False"
+        Title="Buscar en documento"
+        Width="480"
+        SizeToContent="Height"
+        MinWidth="420"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="20" Spacing="14">
+        <TextBlock Text="Buscar en el documento"
+                   FontSize="18"
+                   FontWeight="SemiBold" />
+        <TextBox x:Name="SearchInput"
+                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                 KeyDown="SearchInput_KeyDown"
+                 PlaceholderText="Nombre, atributo, ruta o valor..." />
+        <StackPanel Spacing="8">
+            <CheckBox Content="Distinguir mayúsculas y minúsculas"
+                      IsChecked="{Binding SearchMatchCase, Mode=TwoWay}" />
+            <CheckBox Content="Coincidir palabra completa"
+                      IsChecked="{Binding SearchWholeWord, Mode=TwoWay}" />
+        </StackPanel>
+        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+            <TextBlock Text="{Binding SearchStatus}"
+                       VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis" />
+            <Button Grid.Column="1"
+                    Content="Anterior"
+                    Command="{Binding SearchPreviousCommand}"
+                    Padding="16,8" />
+            <Button Grid.Column="2"
+                    Content="Siguiente"
+                    Command="{Binding SearchNextCommand}"
+                    Padding="16,8" />
+        </Grid>
+    </StackPanel>
+</Window>

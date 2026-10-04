@@ -20,6 +20,7 @@ public partial class MainWindow : Window
     private ScrollViewer? editorScrollViewer;
     private ScrollViewer? lineNumberScrollViewer;
     private MainViewModel? viewModel;
+    private SearchWindow? searchWindow;
     private bool synchronizingFromEditor;
 
     public MainWindow()
@@ -101,16 +102,23 @@ public partial class MainWindow : Window
     private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName != nameof(MainViewModel.SelectedNode)
+            && e.PropertyName != nameof(MainViewModel.SearchSelectionStart))
+        {
+            return;
+        }
+
+        var currentViewModel = viewModel;
+        if (currentViewModel is null
+            || currentViewModel.SelectedNode is not { EditorStart: >= 0 } node
             || synchronizingFromEditor
-            || viewModel?.InputText != viewModel?.FormattedText
-            || viewModel?.SelectedNode is not { EditorStart: >= 0 } node)
+            || currentViewModel.InputText != currentViewModel.FormattedText)
         {
             return;
         }
 
         Dispatcher.UIThread.Post(() =>
         {
-            if (viewModel.SelectedNode != node)
+            if (currentViewModel.SelectedNode != node)
             {
                 return;
             }
@@ -119,12 +127,24 @@ public partial class MainWindow : Window
             synchronizingFromEditor = true;
             try
             {
-                var selectionStart = node.EditorBlockStart >= 0 ? node.EditorBlockStart : node.EditorStart;
-                var selectionLength = node.EditorBlockStart >= 0 ? node.EditorBlockLength : node.EditorLength;
+                var searchSelectionStart = currentViewModel.SearchSelectionStart;
+                var selectionStart = searchSelectionStart >= 0
+                    ? searchSelectionStart
+                    : node.EditorBlockStart >= 0
+                        ? node.EditorBlockStart
+                        : node.EditorStart;
+                var selectionLength = searchSelectionStart >= 0
+                    ? currentViewModel.SearchSelectionLength
+                    : node.EditorBlockStart >= 0
+                        ? node.EditorBlockLength
+                        : node.EditorLength;
                 DocumentEditor.CaretIndex = selectionStart;
                 DocumentEditor.SelectionStart = selectionStart;
                 DocumentEditor.SelectionEnd = selectionStart + selectionLength;
-                DocumentEditor.Focus();
+                if (searchWindow is not { IsActive: true, IsKeyboardFocusWithin: true })
+                {
+                    DocumentEditor.Focus();
+                }
             }
             finally
             {
@@ -170,6 +190,28 @@ public partial class MainWindow : Window
                 lineNumberScrollViewer.Offset.X,
                 editorScrollViewer.Offset.Y);
         }
+    }
+
+    private void SearchMenuItem_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModel currentViewModel)
+        {
+            return;
+        }
+
+        if (searchWindow is { IsVisible: true })
+        {
+            searchWindow.Activate();
+            searchWindow.FocusSearchInput();
+            return;
+        }
+
+        searchWindow = new SearchWindow
+        {
+            DataContext = currentViewModel
+        };
+        searchWindow.Closed += (_, _) => searchWindow = null;
+        searchWindow.Show(this);
     }
 
     private async void OpenMenuItem_Click(object sender, RoutedEventArgs e) => await OpenFileAsync();

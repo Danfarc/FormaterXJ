@@ -1,18 +1,22 @@
 using System;
 using System.Collections.ObjectModel;
 using Avalonia.Media;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace FormaterXJ.Models;
 
-public class DocumentNode
+public partial class DocumentNode : ObservableObject
 {
     public string Name { get; set; } = string.Empty;
     public string Value { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
     public string Path { get; set; } = string.Empty;
     public bool IsExpanded { get; set; } = true;
-    public bool IsSearchMatch { get; set; }
-    public bool IsCurrentSearchMatch { get; set; }
+    [ObservableProperty]
+    private bool isSearchMatch;
+
+    [ObservableProperty]
+    private bool isCurrentSearchMatch;
     public int EditorStart { get; set; } = -1;
     public int EditorLength { get; set; }
     public int EditorBlockStart { get; set; } = -1;
@@ -48,6 +52,10 @@ public class DocumentNode
         : IsSearchMatch
             ? Brushes.DarkGoldenrod
             : Brushes.Transparent;
+
+    partial void OnIsSearchMatchChanged(bool value) => OnPropertyChanged(nameof(SearchBackground));
+
+    partial void OnIsCurrentSearchMatchChanged(bool value) => OnPropertyChanged(nameof(SearchBackground));
 
     public void AddChild(DocumentNode child)
     {
