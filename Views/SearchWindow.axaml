@@ -4,6 +4,7 @@
         x:Class="FormaterXJ.Views.SearchWindow"
         x:DataType="vm:MainViewModel"
         x:CompileBindings="False"
+        Icon="/Assets/avalonia-logo.ico"
         Title="Buscar en documento"
         Width="480"
         SizeToContent="Height"
