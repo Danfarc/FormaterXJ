@@ -7,8 +7,9 @@ FormaterXJ es una aplicación de escritorio multiplataforma desarrollada con Ava
 - `Program.cs`: punto de entrada de la aplicación. Configura Avalonia y arranca la ventana principal.
 - `App.axaml.cs`: carga el árbol XAML de la app y asigna la ventana principal.
 - `App.axaml`: define el estilo global y el `ViewLocator` de Avalonia.
-- `Views/MainWindow.axaml`: barra Archivo/Opciones con el formato actual centrado, editor con margen opcional de líneas, árbol y controles de búsqueda.
+- `Views/MainWindow.axaml`: barra Archivo/Buscar/Opciones/Ayuda con el formato actual centrado, editor con margen opcional de líneas, árbol y controles de búsqueda.
 - `Views/MainWindow.axaml.cs`: lógica de UI y carga de archivo.
+- `Views/HelpWindow.axaml` y `Views/AboutWindow.axaml`: guía de menús e información de la aplicación.
 - `ViewModels/MainViewModel.cs`: estado de la vista, detección de formato, formateo, árbol y navegación de búsquedas.
 - `Models/DocumentNode.cs`: nodos del árbol con propiedades, detalle y resaltado de coincidencias.
 - `Models/DocumentResult.cs`: resultado de análisis de formato.
@@ -62,6 +63,7 @@ dotnet test FormaterXJ.Tests/FormaterXJ.Tests.csproj
 - El menú `Opciones > Posición de los paneles` permite ubicar el árbol a la izquierda o derecha; el documento ocupa automáticamente el lado opuesto.
 - El menú `Opciones > Estilo del árbol` permite alternar entre Estándar, Compacto, Tarjetas, Explorador JSON y Explorador XML. Este último distingue la declaración, el elemento raíz, los elementos, atributos y contenido; la elección se incluye en los perfiles.
 - El menú `Opciones > Vista` agrupa los tamaños de letra independientes (10–18 pt) y la opción de numeración de líneas del editor.
+- El menú `Ayuda` muestra una guía rápida de Archivo, Buscar, Opciones y Ayuda, además del desarrollador, versión y licencia en `Acerca de FormaterXJ`.
 - Los textos y la franja de numeración usan recursos dinámicos del tema para conservar contraste en modo claro y oscuro; el check de numeración actualiza explícitamente el margen del editor.
 - El menú `Vista` permite configurar tamaños de letra independientes (10–18 pt) para editor y árbol; al cambiar el tamaño del árbol también se ajustan el icono de expansión y el espaciado de los nodos. La numeración de líneas del editor se puede activar/desactivar (activada por defecto).
 - La franja numerada se muestra a la izquierda del editor, permanece separada del contenido y sincroniza su desplazamiento vertical; al formatear, refleja las líneas del texto formateado.

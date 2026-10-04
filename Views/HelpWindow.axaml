@@ -1,0 +1,61 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="FormaterXJ.Views.HelpWindow"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Ayuda - FormaterXJ"
+        Width="620"
+        Height="620"
+        MinWidth="480"
+        MinHeight="420"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="20" RowSpacing="16">
+        <StackPanel Spacing="4">
+            <TextBlock Text="Resumen de los menús"
+                       FontSize="20"
+                       FontWeight="SemiBold" />
+            <TextBlock Text="Guía rápida de las acciones disponibles en FormaterXJ."
+                       TextWrapping="Wrap"
+                       Opacity="0.8" />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="16">
+                <StackPanel Spacing="5">
+                    <TextBlock Text="Archivo"
+                               FontSize="16"
+                               FontWeight="SemiBold" />
+                    <TextBlock TextWrapping="Wrap"
+                               Text="Abrir: carga un archivo JSON, XML o TXT y lo formatea. Guardar formateado: guarda el documento con el formato aplicado. Perfiles: crea, edita, elimina o selecciona configuraciones de apariencia. Archivos recientes: vuelve a abrir archivos usados recientemente. Cerrar: sale de la aplicación." />
+                </StackPanel>
+                <StackPanel Spacing="5">
+                    <TextBlock Text="Buscar"
+                               FontSize="16"
+                               FontWeight="SemiBold" />
+                    <TextBlock TextWrapping="Wrap"
+                               Text="Busca nombres, atributos, rutas y valores en el documento. Permite distinguir mayúsculas, buscar palabras completas y recorrer coincidencias con Anterior y Siguiente." />
+                </StackPanel>
+                <StackPanel Spacing="5">
+                    <TextBlock Text="Opciones"
+                               FontSize="16"
+                               FontWeight="SemiBold" />
+                    <TextBlock TextWrapping="Wrap"
+                               Text="Posición de los paneles: coloca el árbol a la izquierda o derecha. Estilo del árbol: elige Estándar, Compacto, Tarjetas, Explorador JSON o Explorador XML. Tema: cambia entre oscuro, claro o el del sistema. Vista: ajusta el tamaño de letra del editor y el árbol, y activa o desactiva la numeración de líneas." />
+                </StackPanel>
+                <StackPanel Spacing="5">
+                    <TextBlock Text="Ayuda"
+                               FontSize="16"
+                               FontWeight="SemiBold" />
+                    <TextBlock TextWrapping="Wrap"
+                               Text="Resumen de los menús: muestra esta guía. Acerca de FormaterXJ: muestra el desarrollador, la versión y la licencia de la aplicación." />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Button Grid.Row="2"
+                Content="Cerrar"
+                HorizontalAlignment="Right"
+                Padding="18,8"
+                Click="Close_Click" />
+    </Grid>
+</Window>

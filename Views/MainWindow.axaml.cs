@@ -294,6 +294,16 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void HelpSummaryMenuItem_Click(object? sender, RoutedEventArgs e)
+    {
+        await new HelpWindow().ShowDialog(this);
+    }
+
+    private async void AboutMenuItem_Click(object? sender, RoutedEventArgs e)
+    {
+        await new AboutWindow().ShowDialog(this);
+    }
+
     private void LineNumbersMenuItem_Click(object sender, RoutedEventArgs e)
     {
         if (sender is MenuItem menuItem && DataContext is MainViewModel viewModel)

@@ -1,0 +1,51 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="FormaterXJ.Views.AboutWindow"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Acerca de FormaterXJ"
+        SizeToContent="WidthAndHeight"
+        MinWidth="360"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="28" Spacing="14">
+        <TextBlock Text="FormaterXJ"
+                   FontSize="24"
+                   FontWeight="SemiBold"
+                   HorizontalAlignment="Center" />
+        <TextBlock Text="Formateador y explorador de documentos JSON y XML."
+                   TextWrapping="Wrap"
+                   MaxWidth="360"
+                   TextAlignment="Center"
+                   Opacity="0.85" />
+        <Border Height="1"
+                Background="{DynamicResource ThemeForegroundBrush}"
+                Opacity="0.25" />
+        <Grid ColumnDefinitions="Auto,*"
+              RowDefinitions="Auto,Auto,Auto"
+              ColumnSpacing="16"
+              RowSpacing="10">
+            <TextBlock Text="Desarrollador"
+                       FontWeight="SemiBold" />
+            <TextBlock Grid.Column="1"
+                       Text="Daniel Felipe Arana Castillo"
+                       TextWrapping="Wrap" />
+            <TextBlock Grid.Row="1"
+                       Text="Versión"
+                       FontWeight="SemiBold" />
+            <TextBlock x:Name="VersionText"
+                       Grid.Row="1"
+                       Grid.Column="1" />
+            <TextBlock Grid.Row="2"
+                       Text="Licencia"
+                       FontWeight="SemiBold" />
+            <TextBlock Grid.Row="2"
+                       Grid.Column="1"
+                       Text="Open source (código abierto)" />
+        </Grid>
+        <Button Content="Cerrar"
+                HorizontalAlignment="Center"
+                Padding="22,8"
+                Click="Close_Click" />
+    </StackPanel>
+</Window>
