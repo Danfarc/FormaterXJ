@@ -37,6 +37,18 @@ public partial class MainViewModel : ObservableObject
     private Thickness treeExpanderMargin = new(12, 0);
 
     [ObservableProperty]
+    private CornerRadius treeHeaderCornerRadius = new(4);
+
+    [ObservableProperty]
+    private Thickness treeHeaderBorderThickness;
+
+    [ObservableProperty]
+    private Thickness treeItemMargin;
+
+    [ObservableProperty]
+    private string treeStyle = "Standard";
+
+    [ObservableProperty]
     private bool showLineNumbers = true;
 
     [ObservableProperty]
@@ -116,6 +128,12 @@ public partial class MainViewModel : ObservableObject
 
     public bool IsSystemTheme => Theme == "System";
 
+    public bool IsStandardTreeStyle => TreeStyle == "Standard";
+
+    public bool IsCompactTreeStyle => TreeStyle == "Compact";
+
+    public bool IsCardTreeStyle => TreeStyle == "Cards";
+
     public bool HasProfileStatus => !string.IsNullOrEmpty(ProfileStatus);
 
     public bool HasErrorLocation => ErrorPosition >= 0;
@@ -144,6 +162,14 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsSystemTheme));
     }
 
+    partial void OnTreeStyleChanged(string value)
+    {
+        OnPropertyChanged(nameof(IsStandardTreeStyle));
+        OnPropertyChanged(nameof(IsCompactTreeStyle));
+        OnPropertyChanged(nameof(IsCardTreeStyle));
+        UpdateTreeStyleMetrics();
+    }
+
     partial void OnProfileStatusChanged(string value)
     {
         OnPropertyChanged(nameof(HasProfileStatus));
@@ -161,6 +187,7 @@ public partial class MainViewModel : ObservableObject
         ShowLineNumbers = profile.ShowLineNumbers;
         IsTreeOnLeft = profile.IsTreeOnLeft;
         Theme = profile.Theme;
+        TreeStyle = profile.TreeStyle;
     }
 
     public UserProfile CreateProfile()
@@ -171,7 +198,8 @@ public partial class MainViewModel : ObservableObject
             TreeFontSize = TreeFontSize,
             ShowLineNumbers = ShowLineNumbers,
             IsTreeOnLeft = IsTreeOnLeft,
-            Theme = Theme
+            Theme = Theme,
+            TreeStyle = TreeStyle
         };
     }
 
@@ -231,11 +259,42 @@ public partial class MainViewModel : ObservableObject
 
     partial void OnTreeFontSizeChanged(double value)
     {
-        var scale = value / 13;
-        TreeExpanderSize = 12 * scale;
-        TreeItemMinHeight = 28 * scale;
-        TreeItemPadding = new Thickness(4 * scale);
-        TreeExpanderMargin = new Thickness(12 * scale, 0);
+        UpdateTreeStyleMetrics();
+    }
+
+    private void UpdateTreeStyleMetrics()
+    {
+        var scale = TreeFontSize / 13;
+        switch (TreeStyle)
+        {
+            case "Compact":
+                TreeExpanderSize = 10 * scale;
+                TreeItemMinHeight = 20 * scale;
+                TreeItemPadding = new Thickness(2 * scale);
+                TreeExpanderMargin = new Thickness(6 * scale, 0);
+                TreeHeaderCornerRadius = new CornerRadius(2 * scale);
+                TreeHeaderBorderThickness = new Thickness(0);
+                TreeItemMargin = new Thickness(0);
+                break;
+            case "Cards":
+                TreeExpanderSize = 13 * scale;
+                TreeItemMinHeight = 38 * scale;
+                TreeItemPadding = new Thickness(8 * scale);
+                TreeExpanderMargin = new Thickness(12 * scale, 0);
+                TreeHeaderCornerRadius = new CornerRadius(8 * scale);
+                TreeHeaderBorderThickness = new Thickness(1);
+                TreeItemMargin = new Thickness(0, 2 * scale);
+                break;
+            default:
+                TreeExpanderSize = 12 * scale;
+                TreeItemMinHeight = 28 * scale;
+                TreeItemPadding = new Thickness(4 * scale);
+                TreeExpanderMargin = new Thickness(12 * scale, 0);
+                TreeHeaderCornerRadius = new CornerRadius(4 * scale);
+                TreeHeaderBorderThickness = new Thickness(0);
+                TreeItemMargin = new Thickness(0);
+                break;
+        }
     }
 
     [RelayCommand]

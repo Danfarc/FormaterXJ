@@ -452,6 +452,25 @@ public class DocumentFormatterTests
     }
 
     [Fact]
+    public void TreeStyleChangesDensityAndCardAppearance()
+    {
+        var viewModel = new MainViewModel();
+
+        Assert.Equal("Standard", viewModel.TreeStyle);
+        Assert.Equal(28, viewModel.TreeItemMinHeight);
+
+        viewModel.TreeStyle = "Compact";
+        Assert.Equal(20, viewModel.TreeItemMinHeight);
+        Assert.Equal(0, viewModel.TreeHeaderBorderThickness.Left);
+
+        viewModel.TreeStyle = "Cards";
+        Assert.Equal(38, viewModel.TreeItemMinHeight);
+        Assert.Equal(1, viewModel.TreeHeaderBorderThickness.Left);
+        Assert.Equal(8, viewModel.TreeHeaderCornerRadius.TopLeft);
+        Assert.Equal(2, viewModel.TreeItemMargin.Top);
+    }
+
+    [Fact]
     public void MovingTreeToLeftPlacesDocumentOnRight()
     {
         var viewModel = new MainViewModel();
@@ -507,7 +526,8 @@ public class DocumentFormatterTests
             TreeFontSize = 18,
             ShowLineNumbers = false,
             IsTreeOnLeft = true,
-            Theme = "Light"
+            Theme = "Light",
+            TreeStyle = "Cards"
         };
 
         try
@@ -524,9 +544,41 @@ public class DocumentFormatterTests
             Assert.False(restoredViewModel.ShowLineNumbers);
             Assert.True(restoredViewModel.IsTreeOnLeft);
             Assert.Equal("Light", restoredViewModel.Theme);
+            Assert.Equal("Cards", restoredViewModel.TreeStyle);
             Assert.Equal("Trabajo", loadedProfile.Name);
             Assert.Equal("Trabajo", service.LoadActiveProfile()?.Name);
             Assert.Equal(new[] { "Trabajo" }, service.ListProfiles());
+        }
+        finally
+        {
+            if (Directory.Exists(profilesDirectory))
+            {
+                Directory.Delete(profilesDirectory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void EditingProfileDoesNotActivateItUntilSavedAndDeletingRemovesIt()
+    {
+        var profilesDirectory = Path.Combine(Path.GetTempPath(), $"FormaterXJ-{Guid.NewGuid():N}");
+        var service = new UserProfileService(profilesDirectory);
+
+        try
+        {
+            service.Save("Trabajo", new UserProfile { Theme = "Light" });
+            service.Save("Personal", new UserProfile { Theme = "Dark" });
+
+            var editedProfile = service.Read("Trabajo");
+            editedProfile.Theme = "System";
+            Assert.Equal("Personal", service.LoadActiveProfile()?.Name);
+
+            service.Save(editedProfile.Name, editedProfile);
+            Assert.Equal("System", service.Load("Trabajo").Theme);
+
+            service.Delete("Trabajo");
+            Assert.DoesNotContain("Trabajo", service.ListProfiles());
+            Assert.False(File.Exists(Path.Combine(profilesDirectory, "Trabajo.json")));
         }
         finally
         {

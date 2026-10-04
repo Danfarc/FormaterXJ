@@ -254,6 +254,30 @@ public partial class MainWindow : Window
         }
     }
 
+    private void StandardTreeStyle_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.TreeStyle = "Standard";
+        }
+    }
+
+    private void CompactTreeStyle_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.TreeStyle = "Compact";
+        }
+    }
+
+    private void CardTreeStyle_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.TreeStyle = "Cards";
+        }
+    }
+
     private void LineNumbersMenuItem_Click(object sender, RoutedEventArgs e)
     {
         if (sender is MenuItem menuItem && DataContext is MainViewModel viewModel)
@@ -331,7 +355,7 @@ public partial class MainWindow : Window
         Application.Current!.RequestedThemeVariant = ThemeVariant.Default;
     }
 
-    private async void SaveProfileMenuItem_Click(object? sender, RoutedEventArgs e)
+    private async void CreateProfileMenuItem_Click(object? sender, RoutedEventArgs e)
     {
         if (DataContext is not MainViewModel currentViewModel)
         {
@@ -359,6 +383,79 @@ public partial class MainWindow : Window
         {
             currentViewModel.ProfileStatus = string.Empty;
             currentViewModel.ErrorMessage = $"No se pudo guardar el perfil: {exception.Message}";
+        }
+    }
+
+    private async void EditProfileMenuItem_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModel currentViewModel)
+        {
+            return;
+        }
+
+        try
+        {
+            var profileService = new UserProfileService(UserProfileService.DefaultProfilesDirectory);
+            var profiles = profileService.ListProfiles()
+                .Select(profileService.Read)
+                .ToArray();
+            if (profiles.Length == 0)
+            {
+                currentViewModel.ProfileStatus = "No hay perfiles para editar.";
+                return;
+            }
+
+            var editor = new ProfileEditorWindow(profiles);
+            if (await editor.ShowDialog<bool>(this) && editor.EditedProfile is { } editedProfile)
+            {
+                profileService.Save(editedProfile.Name, editedProfile);
+                currentViewModel.ApplyProfile(editedProfile);
+                currentViewModel.ProfileStatus = $"Perfil «{editedProfile.Name}» actualizado.";
+                ApplyTheme(editedProfile.Theme);
+            }
+        }
+        catch (Exception exception) when (exception is IOException
+            or InvalidDataException
+            or UnauthorizedAccessException
+            or System.Text.Json.JsonException)
+        {
+            currentViewModel.ProfileStatus = string.Empty;
+            currentViewModel.ErrorMessage = $"No se pudo editar el perfil: {exception.Message}";
+        }
+    }
+
+    private async void DeleteProfileMenuItem_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModel currentViewModel)
+        {
+            return;
+        }
+
+        try
+        {
+            var profileService = new UserProfileService(UserProfileService.DefaultProfilesDirectory);
+            var profiles = profileService.ListProfiles();
+            if (profiles.Count == 0)
+            {
+                currentViewModel.ProfileStatus = "No hay perfiles para eliminar.";
+                return;
+            }
+
+            var deleteDialog = new ProfileDeleteWindow(profiles);
+            if (await deleteDialog.ShowDialog<bool>(this)
+                && deleteDialog.SelectedProfileName is { } selectedName)
+            {
+                profileService.Delete(selectedName);
+                currentViewModel.ProfileStatus = $"Perfil «{selectedName}» eliminado.";
+            }
+        }
+        catch (Exception exception) when (exception is IOException
+            or InvalidDataException
+            or UnauthorizedAccessException
+            or System.Text.Json.JsonException)
+        {
+            currentViewModel.ProfileStatus = string.Empty;
+            currentViewModel.ErrorMessage = $"No se pudo eliminar el perfil: {exception.Message}";
         }
     }
 

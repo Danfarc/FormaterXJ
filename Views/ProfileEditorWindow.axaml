@@ -1,0 +1,65 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="FormaterXJ.Views.ProfileEditorWindow"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Editar perfil"
+        Width="460"
+        SizeToContent="Height"
+        MinWidth="400"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+    <StackPanel Margin="20" Spacing="12">
+        <TextBlock Text="Editar configuración del perfil"
+                   FontSize="18"
+                   FontWeight="SemiBold" />
+        <ComboBox x:Name="ProfileSelector"
+                  SelectionChanged="ProfileSelector_SelectionChanged" />
+        <Separator />
+        <Grid ColumnDefinitions="*,Auto"
+              RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+              RowSpacing="10"
+              ColumnSpacing="12">
+            <TextBlock Text="Tema" VerticalAlignment="Center" />
+            <ComboBox x:Name="ThemeSelector"
+                      Grid.Column="1"
+                      MinWidth="160" />
+
+            <TextBlock Grid.Row="1" Text="Panel del árbol" VerticalAlignment="Center" />
+            <ComboBox x:Name="TreePositionSelector"
+                      Grid.Row="1"
+                      Grid.Column="1"
+                      MinWidth="160" />
+
+            <TextBlock Grid.Row="2" Text="Estilo del árbol" VerticalAlignment="Center" />
+            <ComboBox x:Name="TreeStyleSelector"
+                      Grid.Row="2"
+                      Grid.Column="1"
+                      MinWidth="160" />
+
+            <TextBlock Grid.Row="3" Text="Tamaño de letra del editor" VerticalAlignment="Center" />
+            <ComboBox x:Name="EditorFontSelector"
+                      Grid.Row="3"
+                      Grid.Column="1"
+                      MinWidth="160" />
+
+            <TextBlock Grid.Row="4" Text="Tamaño de letra del árbol" VerticalAlignment="Center" />
+            <ComboBox x:Name="TreeFontSelector"
+                      Grid.Row="4"
+                      Grid.Column="1"
+                      MinWidth="160" />
+        </Grid>
+        <CheckBox x:Name="LineNumbersOption"
+                  Content="Mostrar numeración de líneas" />
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8">
+            <Button Content="Cancelar"
+                    Click="Cancel_Click"
+                    Padding="16,8" />
+            <Button Content="Guardar cambios"
+                    Click="Save_Click"
+                    IsDefault="True"
+                    Padding="16,8" />
+        </StackPanel>
+    </StackPanel>
+</Window>

@@ -8,4 +8,5 @@ public sealed class UserProfile
     public bool ShowLineNumbers { get; set; } = true;
     public bool IsTreeOnLeft { get; set; }
     public string Theme { get; set; } = "Dark";
+    public string TreeStyle { get; set; } = "Standard";
 }

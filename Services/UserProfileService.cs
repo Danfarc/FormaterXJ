@@ -59,6 +59,13 @@ public sealed class UserProfileService
 
     public UserProfile Load(string name)
     {
+        var profile = Read(name);
+        SetActiveProfile(name);
+        return profile;
+    }
+
+    public UserProfile Read(string name)
+    {
         var profilePath = GetProfilePath(name);
         var profile = JsonSerializer.Deserialize<UserProfile>(File.ReadAllText(profilePath))
             ?? throw new InvalidDataException("El perfil está vacío o no contiene una configuración válida.");
@@ -66,9 +73,8 @@ public sealed class UserProfileService
         {
             throw new InvalidDataException("El nombre del perfil no coincide con su archivo.");
         }
-
         Validate(profile);
-        SetActiveProfile(name);
+        Validate(profile);
         return profile;
     }
 
@@ -87,6 +93,22 @@ public sealed class UserProfileService
             WriteIndented = true
         }));
         SetActiveProfile(name);
+    }
+
+    public void Delete(string name)
+    {
+        var profilePath = GetProfilePath(name);
+        if (!File.Exists(profilePath))
+        {
+            throw new FileNotFoundException("No se encontró el perfil seleccionado.", profilePath);
+        }
+
+        File.Delete(profilePath);
+        if (File.Exists(activeProfilePath)
+            && string.Equals(File.ReadAllText(activeProfilePath), name, StringComparison.Ordinal))
+        {
+            File.Delete(activeProfilePath);
+        }
     }
 
     private string GetProfilePath(string name)
@@ -131,7 +153,8 @@ public sealed class UserProfileService
         if (!IsValidProfileName(profile.Name)
             || !Array.Exists(AvailableFontSizes, size => size == profile.EditorFontSize)
             || !Array.Exists(AvailableFontSizes, size => size == profile.TreeFontSize)
-            || profile.Theme is not ("Dark" or "Light" or "System"))
+            || profile.Theme is not ("Dark" or "Light" or "System")
+            || profile.TreeStyle is not ("Standard" or "Compact" or "Cards"))
         {
             throw new InvalidDataException("El perfil contiene valores no compatibles.");
         }

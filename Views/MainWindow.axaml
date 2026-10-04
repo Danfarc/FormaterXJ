@@ -36,8 +36,12 @@
                           SubmenuOpened="FileMenu_SubmenuOpened">
                     <MenuItem Header="Abrir..." Click="OpenMenuItem_Click" />
                     <MenuItem Header="Guardar formateado..." Click="SaveMenuItem_Click" />
-                    <MenuItem Header="Guardar perfil..." Click="SaveProfileMenuItem_Click" />
-                    <MenuItem Header="Seleccionar perfil..." Click="SelectProfileMenuItem_Click" />
+                    <MenuItem Header="Perfiles">
+                        <MenuItem Header="Crear..." Click="CreateProfileMenuItem_Click" />
+                        <MenuItem Header="Editar..." Click="EditProfileMenuItem_Click" />
+                        <MenuItem Header="Eliminar..." Click="DeleteProfileMenuItem_Click" />
+                        <MenuItem Header="Seleccionar..." Click="SelectProfileMenuItem_Click" />
+                    </MenuItem>
                     <MenuItem x:Name="RecentFilesMenu" Header="Archivos recientes">
                         <MenuItem Header="(Sin archivos recientes)"
                                   IsEnabled="False" />
@@ -54,6 +58,20 @@
                         <MenuItem Header="Árbol a la derecha"
                                   ToggleType="Radio"
                                   IsChecked="{Binding IsTreeOnRight, Mode=TwoWay}" />
+                    </MenuItem>
+                    <MenuItem Header="Estilo del árbol">
+                        <MenuItem Header="Estándar"
+                                  ToggleType="Radio"
+                                  IsChecked="{Binding IsStandardTreeStyle}"
+                                  Click="StandardTreeStyle_Click" />
+                        <MenuItem Header="Compacto"
+                                  ToggleType="Radio"
+                                  IsChecked="{Binding IsCompactTreeStyle}"
+                                  Click="CompactTreeStyle_Click" />
+                        <MenuItem Header="Tarjetas"
+                                  ToggleType="Radio"
+                                  IsChecked="{Binding IsCardTreeStyle}"
+                                  Click="CardTreeStyle_Click" />
                     </MenuItem>
                     <MenuItem Header="Tema">
                         <MenuItem Header="Oscuro"
@@ -177,6 +195,8 @@
                                 <Style Selector="TreeViewItem">
                                     <Setter Property="IsExpanded"
                                             Value="{Binding IsExpanded, Mode=TwoWay}" />
+                                    <Setter Property="Margin"
+                                            Value="{Binding DataContext.TreeItemMargin, RelativeSource={RelativeSource AncestorType=TreeView}}" />
                                     <Setter Property="MinHeight"
                                             Value="{Binding DataContext.TreeItemMinHeight, RelativeSource={RelativeSource AncestorType=TreeView}}" />
                                     <Setter Property="Padding"
@@ -196,7 +216,9 @@
                             <TreeView.ItemTemplate>
                                 <TreeDataTemplate ItemsSource="{Binding Children}" DataType="models:DocumentNode">
                                     <Border Padding="{Binding DataContext.TreeItemPadding, RelativeSource={RelativeSource AncestorType=TreeView}}"
-                                            CornerRadius="4">
+                                            BorderBrush="{DynamicResource ThemeForegroundBrush}"
+                                            BorderThickness="{Binding DataContext.TreeHeaderBorderThickness, RelativeSource={RelativeSource AncestorType=TreeView}}"
+                                            CornerRadius="{Binding DataContext.TreeHeaderCornerRadius, RelativeSource={RelativeSource AncestorType=TreeView}}">
                                         <Border.ContextMenu>
                                             <ContextMenu Opening="NodeContextMenu_Opening">
                                                 <MenuItem Header="Copiar ruta"

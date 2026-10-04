@@ -55,11 +55,12 @@ dotnet test FormaterXJ.Tests/FormaterXJ.Tests.csproj
 - El resaltado del texto seleccionado en el editor usa un color visible y permanece visible cuando el editor pierde el foco; al enfocar un nodo se establece primero el caret y después el rango de selección para evitar colapsarlo.
 - La sincronización de la selección valida el rango del caret y solo se activa mientras el texto coincide con el último documento formateado.
 - Los cambios en el editor validan JSON/XML al instante y muestran línea y columna sin reemplazar el texto ni mover el cursor; pegar contenido o cargar un archivo desde `Archivo > Abrir` lo formatea.
-- Abrir documento, guardar el resultado formateado, guardar con nombre o seleccionar un perfil de opciones y cerrar están en `Archivo`; los perfiles locales se pueden alternar y el último perfil activo se carga al iniciar. El menú `Buscar` abre una ventana con la consulta, opciones y navegación de resultados.
+- Abrir documento, guardar el resultado formateado, administrar perfiles (crear, editar, eliminar y seleccionar) y cerrar están en `Archivo > Perfiles`; los perfiles locales se pueden alternar y el último perfil activo se carga al iniciar. El menú `Buscar` abre una ventana con la consulta, opciones y navegación de resultados.
 - Los archivos JSON/XML/TXT se pueden abrir con `Archivo > Abrir...` o arrastrándolos a la ventana; `Archivo > Archivos recientes` conserva hasta diez rutas para reabrirlas.
 - La ventana principal y las ventanas secundarias usan `/Assets/avalonia-logo.ico`; las ventanas secundarias mantienen la barra de título nativa.
 - El menú `Opciones > Tema` ofrece los temas oscuro, claro y del sistema; oscuro es el tema inicial.
 - El menú `Opciones > Posición de los paneles` permite ubicar el árbol a la izquierda o derecha; el documento ocupa automáticamente el lado opuesto.
+- El menú `Opciones > Estilo del árbol` permite alternar entre Estándar, Compacto y Tarjetas; la elección se incluye en los perfiles.
 - El menú `Opciones > Vista` agrupa los tamaños de letra independientes (10–18 pt) y la opción de numeración de líneas del editor.
 - Los textos y la franja de numeración usan recursos dinámicos del tema para conservar contraste en modo claro y oscuro; el check de numeración actualiza explícitamente el margen del editor.
 - El menú `Vista` permite configurar tamaños de letra independientes (10–18 pt) para editor y árbol; al cambiar el tamaño del árbol también se ajustan el icono de expansión y el espaciado de los nodos. La numeración de líneas del editor se puede activar/desactivar (activada por defecto).
