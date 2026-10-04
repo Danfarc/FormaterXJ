@@ -182,6 +182,7 @@ public partial class MainViewModel : ObservableObject
         SelectedNode = null;
         SelectedNodeDetail = string.Empty;
         ClearSearchState();
+        FormatDocument();
     }
 
     public void SelectNodeAtEditorPosition(int position)

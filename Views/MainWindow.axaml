@@ -2,28 +2,31 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:FormaterXJ.ViewModels"
         xmlns:models="using:FormaterXJ.Models"
+        xmlns:chrome="using:Avalonia.Controls.Chrome"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         d:DesignWidth="1100" d:DesignHeight="700"
         x:Class="FormaterXJ.Views.MainWindow"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="36"
         Loaded="MainWindow_Loaded"
         x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="FormaterXJ - JSON/XML Formatter">
+        Title="">
 
     <Design.DataContext>
         <vm:MainViewModel />
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto,*">
-        <DockPanel LastChildFill="True">
-            <Button DockPanel.Dock="Right"
-                    Content="Formatear"
-                    Command="{Binding FormatDocumentCommand}"
-                    Margin="8,4"
-                    Padding="16,6" />
-            <Menu Padding="8,6">
+    <Grid RowDefinitions="36,*">
+        <DockPanel Grid.Row="0"
+                   LastChildFill="True"
+                   VerticalAlignment="Stretch"
+                   chrome:WindowDecorationProperties.ElementRole="TitleBar">
+            <Menu Padding="8,2"
+                  VerticalAlignment="Center"
+                  chrome:WindowDecorationProperties.ElementRole="User">
                 <MenuItem Header="Archivo">
                     <MenuItem Header="Abrir..." Click="OpenMenuItem_Click" />
                     <MenuItem Header="Guardar formateado..." Click="SaveMenuItem_Click" />
@@ -109,6 +112,7 @@
                                      TextWrapping="NoWrap"
                                      FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
                                      FontSize="{Binding EditorFontSize}"
+                                     PastingFromClipboard="DocumentEditor_PastingFromClipboard"
                                      SelectionBrush="#FFB900"
                                      SelectionForegroundBrush="#202020"
                                      IsInactiveSelectionHighlightEnabled="True"

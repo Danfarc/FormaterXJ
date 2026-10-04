@@ -237,4 +237,15 @@ public class DocumentFormatterTests
         Assert.True(viewModel.ShowLineNumbers);
         Assert.Equal(3, viewModel.LineNumbersText.Split(Environment.NewLine).Length);
     }
+
+    [Fact]
+    public void LoadingTextFormatsItImmediately()
+    {
+        var viewModel = new MainViewModel();
+
+        viewModel.LoadText("{\"name\":\"Ana\"}");
+
+        Assert.True(viewModel.HasValidDocument);
+        Assert.Equal($"{{{Environment.NewLine}  \"name\": \"Ana\"{Environment.NewLine}}}", viewModel.InputText);
+    }
 }

@@ -79,6 +79,11 @@ public partial class MainWindow : Window
         }
     }
 
+    private void DocumentEditor_PastingFromClipboard(object? sender, RoutedEventArgs e)
+    {
+        Dispatcher.UIThread.Post(() => viewModel?.FormatDocumentCommand.Execute(null));
+    }
+
     private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName != nameof(MainViewModel.SelectedNode)
