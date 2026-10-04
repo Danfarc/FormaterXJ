@@ -82,6 +82,18 @@ public partial class MainViewModel : ObservableObject
     private bool hasError;
 
     [ObservableProperty]
+    private int errorLine;
+
+    [ObservableProperty]
+    private int errorColumn;
+
+    [ObservableProperty]
+    private int errorPosition = -1;
+
+    [ObservableProperty]
+    private int errorNavigationRequest;
+
+    [ObservableProperty]
     private ObservableCollection<DocumentNode> rootNodes = new();
 
     [ObservableProperty]
@@ -105,6 +117,8 @@ public partial class MainViewModel : ObservableObject
     public bool IsSystemTheme => Theme == "System";
 
     public bool HasProfileStatus => !string.IsNullOrEmpty(ProfileStatus);
+
+    public bool HasErrorLocation => ErrorPosition >= 0;
 
     public int DocumentPanelColumn => IsTreeOnLeft ? 2 : 0;
 
@@ -133,6 +147,11 @@ public partial class MainViewModel : ObservableObject
     partial void OnProfileStatusChanged(string value)
     {
         OnPropertyChanged(nameof(HasProfileStatus));
+    }
+
+    partial void OnErrorPositionChanged(int value)
+    {
+        OnPropertyChanged(nameof(HasErrorLocation));
     }
 
     public void ApplyProfile(UserProfile profile)
@@ -201,11 +220,39 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void ExpandAllNodes()
+    {
+        SetAllNodesExpanded(true);
+    }
+
+    [RelayCommand]
+    private void CollapseAllNodes()
+    {
+        SetAllNodesExpanded(false);
+    }
+
+    private void SetAllNodesExpanded(bool isExpanded)
+    {
+        if (rootDocument is null)
+        {
+            return;
+        }
+
+        foreach (var node in Flatten(rootDocument))
+        {
+            node.IsExpanded = isExpanded;
+        }
+    }
+
+    [RelayCommand]
     private void FormatDocument()
     {
         ClearSearchState();
         rootDocument = null;
         ErrorMessage = string.Empty;
+        ErrorLine = 0;
+        ErrorColumn = 0;
+        ErrorPosition = -1;
         HasValidDocument = false;
         FormattedText = string.Empty;
         DetectedFormat = "Sin formato";
@@ -223,6 +270,14 @@ public partial class MainViewModel : ObservableObject
         if (!analysis.IsValid)
         {
             ErrorMessage = analysis.ErrorMessage;
+            ErrorLine = analysis.ErrorLine;
+            ErrorColumn = analysis.ErrorColumn;
+            ErrorPosition = analysis.ErrorPosition;
+            if (ErrorPosition >= 0)
+            {
+                ErrorNavigationRequest++;
+            }
+
             return;
         }
 

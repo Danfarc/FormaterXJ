@@ -66,7 +66,10 @@ dotnet test FormaterXJ.Tests/FormaterXJ.Tests.csproj
 - Al formatear correctamente, el editor se reemplaza por el contenido formateado; el árbol refleja el documento analizado.
 - Si el contenido está vacío, muestra un mensaje claro y no borra el texto original.
 - Si el documento no es JSON ni XML válido, se informa el error sin bloquear la aplicación.
+- Los errores de JSON/XML muestran línea y columna; al detectarlos, el editor enfoca y coloca el cursor en la ubicación indicada.
 - La estructura se presenta en un árbol con nodos expandibles y contraíbles.
+- Los botones `Expandir todo` y `Contraer todo` sobre el árbol permiten abrir o cerrar todos los nodos del documento a la vez.
+- El menú contextual de cada nodo permite copiar su ruta al portapapeles: JSONPath para JSON y ruta XPath para XML.
 - La búsqueda busca en nombres, atributos, rutas y valores mientras se escribe, y selecciona cada coincidencia exacta también en el documento del editor; por defecto ignora mayúsculas/minúsculas y busca coincidencias parciales. La ventana `Buscar` ofrece opciones para distinguir mayúsculas/minúsculas y buscar palabras completas, muestra el estado y permite navegar con `Anterior`/`Siguiente`, Enter o Mayús+Enter sin perder el foco.
 - El resaltado de resultados del árbol notifica sus cambios para actualizarse al buscar y limpiar la consulta.
 - La lógica está separada entre UI, modelos, servicios y pruebas.

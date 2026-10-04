@@ -23,26 +23,29 @@ public static class DocumentFormatter
         {
             try
             {
-                using var document = JsonDocument.Parse(text);
+                using var document = JsonDocument.Parse(input);
                 return DocumentResult.Valid(DocumentFormatKind.Json, FormatJson(document.RootElement));
             }
             catch (JsonException ex)
             {
                 var jsonError = $"El contenido parece JSON, pero no es válido: {ex.Message}";
+                var jsonFailure = CreateJsonError(input, jsonError, ex);
 
                 if (!LooksLikeXml(text))
                 {
-                    return DocumentResult.Invalid(jsonError);
+                    return jsonFailure;
                 }
 
                 try
                 {
-                    var xmlDocument = XDocument.Parse(text);
+                    var xmlDocument = XDocument.Parse(input);
                     return DocumentResult.Valid(DocumentFormatKind.Xml, FormatXml(xmlDocument));
                 }
                 catch (XmlException xmlException)
                 {
-                    return DocumentResult.Invalid($"El contenido no es JSON ni XML válido. JSON: {jsonError}. XML: {xmlException.Message}");
+                    return CreateXmlError(input,
+                        $"El contenido no es JSON ni XML válido. JSON: {jsonError}. XML: {xmlException.Message}",
+                        xmlException);
                 }
             }
         }
@@ -51,40 +54,117 @@ public static class DocumentFormatter
         {
             try
             {
-                var xmlDocument = XDocument.Parse(text);
+                var xmlDocument = XDocument.Parse(input);
                 return DocumentResult.Valid(DocumentFormatKind.Xml, FormatXml(xmlDocument));
             }
             catch (XmlException ex)
             {
                 try
                 {
-                    using var document = JsonDocument.Parse(text);
+                    using var document = JsonDocument.Parse(input);
                     return DocumentResult.Valid(DocumentFormatKind.Json, FormatJson(document.RootElement));
                 }
                 catch (JsonException jsonException)
                 {
-                    return DocumentResult.Invalid($"El contenido no es JSON ni XML válido. XML: {ex.Message}. JSON: {jsonException.Message}");
+                    return CreateXmlError(input,
+                        $"El contenido no es JSON ni XML válido. XML: {ex.Message}. JSON: {jsonException.Message}",
+                        ex);
                 }
             }
         }
 
         try
         {
-            using var jsonDocument = JsonDocument.Parse(text);
+            using var jsonDocument = JsonDocument.Parse(input);
             return DocumentResult.Valid(DocumentFormatKind.Json, FormatJson(jsonDocument.RootElement));
         }
-        catch (JsonException)
+        catch (JsonException jsonException)
         {
             try
             {
-                var xmlDocument = XDocument.Parse(text);
+                var xmlDocument = XDocument.Parse(input);
                 return DocumentResult.Valid(DocumentFormatKind.Xml, FormatXml(xmlDocument));
             }
-            catch (XmlException ex)
+            catch (XmlException xmlException)
             {
-                return DocumentResult.Invalid($"El contenido no es un JSON ni XML válido. Error: {ex.Message}");
+                return LooksLikeXml(text)
+                    ? CreateXmlError(input,
+                        $"El contenido no es un JSON ni XML válido. XML: {xmlException.Message}. JSON: {jsonException.Message}",
+                        xmlException)
+                    : CreateJsonError(input,
+                        $"El contenido no es un JSON ni XML válido. JSON: {jsonException.Message}. XML: {xmlException.Message}",
+                        jsonException);
             }
         }
+    }
+
+    private static DocumentResult CreateJsonError(string input, string message, JsonException exception)
+    {
+        var line = (int)(exception.LineNumber ?? 0) + 1;
+        var byteColumn = (int)(exception.BytePositionInLine ?? 0);
+        var column = GetJsonCharacterColumn(input, line, byteColumn);
+        return DocumentResult.InvalidAt(message, line, column, GetPosition(input, line, column));
+    }
+
+    private static DocumentResult CreateXmlError(string input, string message, XmlException exception)
+    {
+        var line = Math.Max(1, exception.LineNumber);
+        var column = Math.Max(1, exception.LinePosition);
+        return DocumentResult.InvalidAt(message, line, column, GetPosition(input, line, column));
+    }
+
+    private static int GetJsonCharacterColumn(string input, int line, int byteColumn)
+    {
+        var lineStart = GetLineStart(input, line);
+        var lineEnd = input.IndexOfAny(['\r', '\n'], lineStart);
+        if (lineEnd < 0)
+        {
+            lineEnd = input.Length;
+        }
+
+        var column = 0;
+        var bytes = 0;
+        while (lineStart + column < lineEnd && bytes < byteColumn)
+        {
+            var characterLength = char.IsHighSurrogate(input[lineStart + column])
+                && lineStart + column + 1 < lineEnd
+                && char.IsLowSurrogate(input[lineStart + column + 1])
+                    ? 2
+                    : 1;
+            var characterBytes = Encoding.UTF8.GetByteCount(input.AsSpan(lineStart + column, characterLength));
+            if (bytes + characterBytes > byteColumn)
+            {
+                break;
+            }
+
+            bytes += characterBytes;
+            column += characterLength;
+        }
+
+        return column + 1;
+    }
+
+    private static int GetPosition(string input, int line, int column)
+    {
+        var lineStart = GetLineStart(input, line);
+        return Math.Min(lineStart + column - 1, input.Length);
+    }
+
+    private static int GetLineStart(string input, int line)
+    {
+        var lineStart = 0;
+        for (var currentLine = 1; currentLine < line && lineStart < input.Length; currentLine++)
+        {
+            var newline = input.IndexOf('\n', lineStart);
+            if (newline < 0)
+            {
+                return input.Length;
+            }
+
+            lineStart = newline + 1;
+        }
+
+        return lineStart;
     }
 
     private static bool LooksLikeJson(string text)

@@ -166,6 +166,36 @@ public class DocumentFormatterTests
 
         Assert.False(result.IsValid);
         Assert.Contains("JSON", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(2, result.ErrorLine);
+        Assert.True(result.ErrorColumn > 0);
+        Assert.InRange(result.ErrorPosition, 0, "{\"name\":\"Ana\"\n\"age\": 42}".Length);
+    }
+
+    [Fact]
+    public void ReportsXmlErrorLineAndColumn()
+    {
+        const string xml = "<root>\n  <item>\n</root>";
+        var result = DocumentFormatter.Analyze(xml);
+
+        Assert.False(result.IsValid);
+        Assert.Equal(3, result.ErrorLine);
+        Assert.True(result.ErrorColumn > 0);
+        Assert.Equal(xml.LastIndexOf("</root>", StringComparison.Ordinal) + 2, result.ErrorPosition);
+    }
+
+    [Fact]
+    public void ViewModelMovesErrorCaretToInvalidDocumentLocation()
+    {
+        var input = "{\n  \"name\": \"Ana\"\n  \"age\": 42\n}";
+        var viewModel = new MainViewModel { InputText = input };
+
+        viewModel.FormatDocumentCommand.Execute(null);
+
+        Assert.True(viewModel.HasError);
+        Assert.True(viewModel.ErrorPosition >= 0);
+        Assert.True(viewModel.ErrorLine > 0);
+        Assert.True(viewModel.ErrorColumn > 0);
+        Assert.Equal(1, viewModel.ErrorNavigationRequest);
     }
 
     [Fact]
@@ -189,6 +219,28 @@ public class DocumentFormatterTests
         Assert.Equal("items", root.Children[1].Name);
         Assert.Equal("name", root.Children[0].Children[0].Name);
         Assert.Equal("Ana", root.Children[0].Children[0].Value);
+    }
+
+    [Fact]
+    public void BuildsJsonPathForPropertiesWithSpecialCharacters()
+    {
+        var root = new JsonTreeBuilder().Build("{\"person name\":{\"first.name\":\"Ana\"}}");
+
+        Assert.Equal("$['person name']", root.Children[0].Path);
+        Assert.Equal("$['person name']['first.name']", root.Children[0].Children[0].Path);
+    }
+
+    [Fact]
+    public void BuildsFullXmlPathsAndIndexesRepeatedSiblings()
+    {
+        var root = new XmlTreeBuilder().Build(
+            "<envio id=\"42\"><item>A</item><other/><item>B</item></envio>");
+
+        Assert.Equal("/envio", root.Path);
+        Assert.Equal("/envio/@id", root.Children[0].Path);
+        Assert.Equal("/envio/item[1]", root.Children[1].Path);
+        Assert.Equal("/envio/other", root.Children[2].Path);
+        Assert.Equal("/envio/item[2]", root.Children[3].Path);
     }
 
     [Fact]
@@ -392,6 +444,28 @@ public class DocumentFormatterTests
         Assert.False(viewModel.IsTreeOnLeft);
         Assert.Equal(0, viewModel.DocumentPanelColumn);
         Assert.Equal(2, viewModel.TreePanelColumn);
+    }
+
+    [Fact]
+    public void ExpandsAndCollapsesAllNodesInTree()
+    {
+        var viewModel = new MainViewModel
+        {
+            InputText = "{\"person\":{\"name\":\"Ana\"},\"items\":[1,2]}"
+        };
+        viewModel.FormatDocumentCommand.Execute(null);
+        var nodes = viewModel.RootNodes[0]
+            .Children
+            .SelectMany(node => new[] { node }.Concat(node.Children))
+            .ToList();
+
+        viewModel.CollapseAllNodesCommand.Execute(null);
+
+        Assert.All(nodes, node => Assert.False(node.IsExpanded));
+
+        viewModel.ExpandAllNodesCommand.Execute(null);
+
+        Assert.All(nodes, node => Assert.True(node.IsExpanded));
     }
 
     [Fact]

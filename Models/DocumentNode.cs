@@ -11,7 +11,10 @@ public partial class DocumentNode : ObservableObject
     public string Value { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
     public string Path { get; set; } = string.Empty;
-    public bool IsExpanded { get; set; } = true;
+
+    [ObservableProperty]
+    private bool isExpanded = true;
+
     [ObservableProperty]
     private bool isSearchMatch;
 

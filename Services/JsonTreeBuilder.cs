@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text.Json;
 using FormaterXJ.Models;
 
@@ -27,7 +28,7 @@ public sealed class JsonTreeBuilder
             case JsonValueKind.Object:
                 foreach (var property in element.EnumerateObject())
                 {
-                    node.AddChild(BuildNode(property.Name, property.Value, path + "." + property.Name));
+                    node.AddChild(BuildNode(property.Name, property.Value, GetPropertyPath(path, property.Name)));
                 }
                 break;
 
@@ -48,6 +49,19 @@ public sealed class JsonTreeBuilder
         }
 
         return node;
+    }
+
+    private static string GetPropertyPath(string parentPath, string propertyName)
+    {
+        if (propertyName.Length > 0
+            && (char.IsLetter(propertyName[0]) || propertyName[0] is '_' or '$')
+            && propertyName.Skip(1).All(character =>
+                char.IsLetterOrDigit(character) || character is '_' or '$'))
+        {
+            return $"{parentPath}.{propertyName}";
+        }
+
+        return $"{parentPath}['{propertyName.Replace("\\", "\\\\").Replace("'", "\\'")}']";
     }
 
     private static string GetValueText(JsonElement element)

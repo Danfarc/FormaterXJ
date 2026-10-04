@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
@@ -103,6 +104,20 @@ public partial class MainWindow : Window
 
     private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(MainViewModel.ErrorNavigationRequest)
+            && viewModel is { ErrorPosition: >= 0 } errorViewModel)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                var errorPosition = Math.Clamp(errorViewModel.ErrorPosition, 0, DocumentEditor.Text?.Length ?? 0);
+                DocumentEditor.CaretIndex = errorPosition;
+                DocumentEditor.SelectionStart = errorPosition;
+                DocumentEditor.SelectionEnd = errorPosition;
+                DocumentEditor.Focus();
+            });
+            return;
+        }
+
         if (e.PropertyName != nameof(MainViewModel.SelectedNode)
             && e.PropertyName != nameof(MainViewModel.SearchSelectionStart))
         {
@@ -243,6 +258,45 @@ public partial class MainWindow : Window
         if (sender is MenuItem menuItem && DataContext is MainViewModel viewModel)
         {
             viewModel.ShowLineNumbers = menuItem.IsChecked;
+        }
+    }
+
+    private void NodeContextMenu_Opening(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        if (sender is ContextMenu contextMenu
+            && contextMenu.PlacementTarget?.DataContext is DocumentNode node
+            && DataContext is MainViewModel currentViewModel)
+        {
+            contextMenu.DataContext = node;
+            currentViewModel.SelectedNode = node;
+            currentViewModel.SelectedNodeDetail = node.DetailText;
+        }
+    }
+
+    private async void CopyNodePath_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem menuItem
+            || menuItem.Parent is not ContextMenu { DataContext: DocumentNode node }
+            || TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard)
+        {
+            return;
+        }
+
+        try
+        {
+            await clipboard.SetTextAsync(node.Path);
+            if (DataContext is MainViewModel currentViewModel)
+            {
+                currentViewModel.ProfileStatus = $"Ruta copiada: {node.Path}";
+            }
+        }
+        catch (Exception exception) when (exception is InvalidOperationException
+            or System.Runtime.InteropServices.COMException)
+        {
+            if (DataContext is MainViewModel currentViewModel)
+            {
+                currentViewModel.ErrorMessage = $"No se pudo copiar la ruta: {exception.Message}";
+            }
         }
     }
 

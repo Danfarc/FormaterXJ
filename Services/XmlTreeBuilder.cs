@@ -11,15 +11,16 @@ public sealed class XmlTreeBuilder
     public DocumentNode Build(string xmlText)
     {
         var document = XDocument.Parse(xmlText);
-        return BuildNode(document.Root ?? throw new InvalidOperationException("El documento XML no tiene raíz."));
+        var root = document.Root ?? throw new InvalidOperationException("El documento XML no tiene raíz.");
+        return BuildNode(root, $"/{root.Name.LocalName}");
     }
 
-    private static DocumentNode BuildNode(XElement element)
+    private static DocumentNode BuildNode(XElement element, string path)
     {
         var node = new DocumentNode
         {
             Name = element.Name.LocalName,
-            Path = element.Name.LocalName,
+            Path = path,
             Type = "Elemento",
             Value = GetTextValue(element)
         };
@@ -29,7 +30,7 @@ public sealed class XmlTreeBuilder
             var attributeNode = new DocumentNode
             {
                 Name = $"@{attribute.Name.LocalName}",
-                Path = $"{element.Name.LocalName}/@{attribute.Name.LocalName}",
+                Path = $"{path}/@{attribute.Name.LocalName}",
                 Type = "Atributo",
                 Value = attribute.Value
             };
@@ -37,9 +38,24 @@ public sealed class XmlTreeBuilder
             node.AddChild(attributeNode);
         }
 
-        foreach (var child in element.Elements())
+        var childElements = element.Elements().ToList();
+        var sameNameCounts = childElements
+            .GroupBy(child => child.Name.LocalName)
+            .ToDictionary(group => group.Key, group => group.Count());
+        var sameNameIndexes = new Dictionary<string, int>();
+        foreach (var child in childElements)
         {
-            node.AddChild(BuildNode(child));
+            var childName = child.Name.LocalName;
+            var childPath = $"{path}/{childName}";
+            if (sameNameCounts[childName] > 1)
+            {
+                sameNameIndexes.TryGetValue(childName, out var index);
+                index++;
+                sameNameIndexes[childName] = index;
+                childPath += $"[{index}]";
+            }
+
+            node.AddChild(BuildNode(child, childPath));
         }
 
         if (element.HasElements)

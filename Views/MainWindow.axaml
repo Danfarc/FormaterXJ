@@ -144,8 +144,22 @@
                         BorderThickness="1"
                         CornerRadius="8"
                         Padding="10">
-                    <Grid RowDefinitions="*">
-                        <TreeView Grid.Row="0"
+                    <Grid RowDefinitions="Auto,*">
+                        <StackPanel Grid.Row="0"
+                                    Orientation="Horizontal"
+                                    HorizontalAlignment="Right"
+                                    Spacing="8"
+                                    Margin="0,0,0,8">
+                            <Button Content="Expandir todo"
+                                    Command="{Binding ExpandAllNodesCommand}"
+                                    IsEnabled="{Binding HasValidDocument}"
+                                    Padding="12,6" />
+                            <Button Content="Contraer todo"
+                                    Command="{Binding CollapseAllNodesCommand}"
+                                    IsEnabled="{Binding HasValidDocument}"
+                                    Padding="12,6" />
+                        </StackPanel>
+                        <TreeView Grid.Row="1"
                                   x:Name="StructureTree"
                                   x:CompileBindings="False"
                                   ItemsSource="{Binding RootNodes}"
@@ -153,6 +167,8 @@
                                   FontSize="{Binding TreeFontSize}">
                             <TreeView.Styles>
                                 <Style Selector="TreeViewItem">
+                                    <Setter Property="IsExpanded"
+                                            Value="{Binding IsExpanded, Mode=TwoWay}" />
                                     <Setter Property="MinHeight"
                                             Value="{Binding DataContext.TreeItemMinHeight, RelativeSource={RelativeSource AncestorType=TreeView}}" />
                                     <Setter Property="Padding"
@@ -173,6 +189,12 @@
                                 <TreeDataTemplate ItemsSource="{Binding Children}" DataType="models:DocumentNode">
                                     <Border Padding="{Binding DataContext.TreeItemPadding, RelativeSource={RelativeSource AncestorType=TreeView}}"
                                             CornerRadius="4">
+                                        <Border.ContextMenu>
+                                            <ContextMenu Opening="NodeContextMenu_Opening">
+                                                <MenuItem Header="Copiar ruta"
+                                                          Click="CopyNodePath_Click" />
+                                            </ContextMenu>
+                                        </Border.ContextMenu>
                                         <Border.Background>
                                             <Binding Path="SearchBackground" />
                                         </Border.Background>
@@ -199,8 +221,16 @@
                     Background="#3b2020"
                     Padding="12"
                     Margin="0,12,0,0">
-                <TextBlock Text="{Binding ErrorMessage}"
-                           Foreground="#ffd5d5" />
+                <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="#ffd5d5" />
+                    <TextBlock IsVisible="{Binding HasErrorLocation}">
+                        <Run Text="Línea " />
+                        <Run Text="{Binding ErrorLine}" />
+                        <Run Text=", columna " />
+                        <Run Text="{Binding ErrorColumn}" />
+                    </TextBlock>
+                </StackPanel>
             </Border>
         </Grid>
     </Grid>
