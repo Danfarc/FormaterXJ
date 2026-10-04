@@ -40,6 +40,9 @@ public partial class MainViewModel : ObservableObject
     private bool showLineNumbers = true;
 
     [ObservableProperty]
+    private bool isTreeOnLeft;
+
+    [ObservableProperty]
     private string formattedText = string.Empty;
 
     [ObservableProperty]
@@ -88,6 +91,23 @@ public partial class MainViewModel : ObservableObject
     private bool applyingSearchResult;
 
     private sealed record SearchResult(DocumentNode Node, int Start, int Length);
+
+    public int DocumentPanelColumn => IsTreeOnLeft ? 2 : 0;
+
+    public int TreePanelColumn => IsTreeOnLeft ? 0 : 2;
+
+    public bool IsTreeOnRight
+    {
+        get => !IsTreeOnLeft;
+        set => IsTreeOnLeft = !value;
+    }
+
+    partial void OnIsTreeOnLeftChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsTreeOnRight));
+        OnPropertyChanged(nameof(DocumentPanelColumn));
+        OnPropertyChanged(nameof(TreePanelColumn));
+    }
 
     partial void OnErrorMessageChanged(string value)
     {

@@ -37,6 +37,14 @@
                 </MenuItem>
                 <MenuItem Header="Buscar" Click="SearchMenuItem_Click" />
                 <MenuItem Header="Opciones">
+                    <MenuItem Header="Posición de los paneles">
+                        <MenuItem Header="Árbol a la izquierda"
+                                  ToggleType="Radio"
+                                  IsChecked="{Binding IsTreeOnLeft, Mode=TwoWay}" />
+                        <MenuItem Header="Árbol a la derecha"
+                                  ToggleType="Radio"
+                                  IsChecked="{Binding IsTreeOnRight, Mode=TwoWay}" />
+                    </MenuItem>
                     <MenuItem Header="Tema">
                         <MenuItem Header="Oscuro"
                                   ToggleType="Radio"
@@ -80,7 +88,8 @@
 
         <Grid Grid.Row="1" RowDefinitions="*,Auto" Margin="16">
             <Grid ColumnDefinitions="*,8,*">
-                <Border BorderBrush="#3A3A3A"
+                <Border Grid.Column="{Binding DocumentPanelColumn}"
+                        BorderBrush="#3A3A3A"
                         BorderThickness="1"
                         CornerRadius="8"
                         Padding="10">
@@ -126,7 +135,7 @@
                               Background="#707070"
                               MinWidth="8" />
 
-                <Border Grid.Column="2"
+                <Border Grid.Column="{Binding TreePanelColumn}"
                         BorderBrush="#3A3A3A"
                         BorderThickness="1"
                         CornerRadius="8"

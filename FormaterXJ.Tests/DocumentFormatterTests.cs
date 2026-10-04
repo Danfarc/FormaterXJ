@@ -370,6 +370,29 @@ public class DocumentFormatterTests
     }
 
     [Fact]
+    public void MovingTreeToLeftPlacesDocumentOnRight()
+    {
+        var viewModel = new MainViewModel();
+
+        Assert.False(viewModel.IsTreeOnLeft);
+        Assert.True(viewModel.IsTreeOnRight);
+        Assert.Equal(0, viewModel.DocumentPanelColumn);
+        Assert.Equal(2, viewModel.TreePanelColumn);
+
+        viewModel.IsTreeOnLeft = true;
+
+        Assert.False(viewModel.IsTreeOnRight);
+        Assert.Equal(2, viewModel.DocumentPanelColumn);
+        Assert.Equal(0, viewModel.TreePanelColumn);
+
+        viewModel.IsTreeOnRight = true;
+
+        Assert.False(viewModel.IsTreeOnLeft);
+        Assert.Equal(0, viewModel.DocumentPanelColumn);
+        Assert.Equal(2, viewModel.TreePanelColumn);
+    }
+
+    [Fact]
     public void UpdatesLineNumberGutterWhenFormattingDocument()
     {
         var viewModel = new MainViewModel

@@ -57,6 +57,7 @@ dotnet test FormaterXJ.Tests/FormaterXJ.Tests.csproj
 - El formateo se ejecuta automáticamente al pegar contenido en el editor o cargar un archivo desde `Archivo > Abrir`; escribir normalmente no dispara el análisis.
 - Abrir documento, guardar el resultado formateado y cerrar están en el menú `Archivo`; el menú `Buscar` abre una ventana con la consulta, opciones y navegación de resultados.
 - El menú `Opciones > Tema` ofrece los temas oscuro, claro y del sistema; oscuro es el tema inicial.
+- El menú `Opciones > Posición de los paneles` permite ubicar el árbol a la izquierda o derecha; el documento ocupa automáticamente el lado opuesto.
 - El menú `Opciones > Vista` agrupa los tamaños de letra independientes (10–18 pt) y la opción de numeración de líneas del editor.
 - Los textos y la franja de numeración usan recursos dinámicos del tema para conservar contraste en modo claro y oscuro; el check de numeración actualiza explícitamente el margen del editor.
 - El menú `Vista` permite configurar tamaños de letra independientes (10–18 pt) para editor y árbol; al cambiar el tamaño del árbol también se ajustan el icono de expansión y el espaciado de los nodos. La numeración de líneas del editor se puede activar/desactivar (activada por defecto).
